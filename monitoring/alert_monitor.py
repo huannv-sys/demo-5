@@ -109,6 +109,29 @@ class AlertMonitor:
                     "enabled": True,
                     "excluded_interfaces": ["lo"],  # Danh sách interface bỏ qua
                     "cooldown": 1800
+                },
+                "high_bandwidth": {
+                    "enabled": True,
+                    "threshold": 80,  # Ngưỡng % băng thông tối đa
+                    "duration": 300,
+                    "cooldown": 3600
+                },
+                "firewall_change": {
+                    "enabled": True,
+                    "cooldown": 1800
+                },
+                "dhcp_server_down": {
+                    "enabled": True,
+                    "cooldown": 1800
+                },
+                "vpn_connection_failed": {
+                    "enabled": True,
+                    "cooldown": 1800
+                },
+                "wireless_interference": {
+                    "enabled": True,
+                    "signal_threshold": -80,  # dBm, tín hiệu yếu
+                    "cooldown": 3600
                 }
             }
         }
@@ -169,6 +192,13 @@ class AlertMonitor:
                     if self._is_router_connected(router_id):
                         self._check_router_resources(router_id)
                         self._check_router_interfaces(router_id)
+                        
+                        # Kiểm tra các thông số nâng cao
+                        self._check_bandwidth_usage(router_id)
+                        self._check_firewall_changes(router_id)
+                        self._check_dhcp_servers(router_id)
+                        self._check_vpn_connections(router_id)
+                        self._check_wireless_networks(router_id)
                 
                 # Chờ đến lần kiểm tra tiếp theo
                 self.stop_event.wait(self.config["check_interval"])
@@ -490,6 +520,64 @@ class AlertMonitor:
         }
         
         send_alert(router_name, "interface_down", None, details)
+    
+    def _send_high_bandwidth_alert(self, router_id, router_name, interface_name, bandwidth_usage, max_bandwidth):
+        """Gửi cảnh báo băng thông cao"""
+        usage_percent = (bandwidth_usage / max_bandwidth) * 100 if max_bandwidth > 0 else 0
+        details = {
+            "router_id": router_id,
+            "interface": interface_name,
+            "bandwidth_usage": f"{bandwidth_usage / 1000000:.1f} Mbps", # Convert to Mbps
+            "maximum_bandwidth": f"{max_bandwidth / 1000000:.1f} Mbps",
+            "usage_percent": f"{usage_percent:.1f}%",
+            "threshold": f"{self.config['alerts']['high_bandwidth']['threshold']}%",
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        send_alert(router_name, "high_bandwidth", None, details)
+    
+    def _send_firewall_change_alert(self, router_id, router_name, changes):
+        """Gửi cảnh báo khi phát hiện thay đổi cấu hình firewall"""
+        details = {
+            "router_id": router_id,
+            "changes": changes,
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        send_alert(router_name, "firewall_change", None, details)
+    
+    def _send_dhcp_server_down_alert(self, router_id, router_name, server_name):
+        """Gửi cảnh báo khi DHCP server ngừng hoạt động"""
+        details = {
+            "router_id": router_id,
+            "server_name": server_name,
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        send_alert(router_name, "dhcp_server_down", None, details)
+    
+    def _send_vpn_connection_failed_alert(self, router_id, router_name, vpn_type, details_info):
+        """Gửi cảnh báo khi kết nối VPN thất bại"""
+        details = {
+            "router_id": router_id,
+            "vpn_type": vpn_type,
+            "vpn_details": details_info,
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        send_alert(router_name, "vpn_connection_failed", None, details)
+    
+    def _send_wireless_interference_alert(self, router_id, router_name, interface_name, signal_strength):
+        """Gửi cảnh báo khi phát hiện nhiễu sóng wireless"""
+        details = {
+            "router_id": router_id,
+            "interface": interface_name,
+            "signal_strength": f"{signal_strength} dBm",
+            "threshold": f"{self.config['alerts']['wireless_interference']['signal_threshold']} dBm",
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        send_alert(router_name, "wireless_interference", None, details)
 
 
 # Singleton instance

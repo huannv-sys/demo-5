@@ -1,1 +1,17 @@
-{"commands":[{"name":"server","cwd":"/","command":"USE_REAL_MIKROTIK_API=true npx tsx server/index.ts","previews":[{"outputType":"webview","preferredPort":5000,"id":"webview1"}]}]}
+{
+  "commands": {
+    "server": {
+      "cwd": "/",
+      "command": "USE_REAL_MIKROTIK_API=true npm run dev",
+      "previews": {
+        "webview1": {
+          "outputType": "webview",
+          "preferredPort": 3000
+        }
+      }
+    }
+  },
+  "replit": {
+    "commands": []
+  }
+}

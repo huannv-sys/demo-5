@@ -1,117 +1,108 @@
 #!/bin/bash
 
-# Script để thêm thiết bị MikroTik vào hệ thống giám sát
-# Sử dụng cho Ubuntu 24.04
+# Script thêm thiết bị MikroTik vào hệ thống
+# Cần được chạy với quyền root (sudo)
 
-echo "===== Thêm thiết bị MikroTik vào hệ thống giám sát ====="
+# Hàm hiển thị thông báo
+print_message() {
+  echo -e "\e[1;34m[INFO]\e[0m $1"
+}
 
-# Kiểm tra tham số command line cho địa chỉ máy chủ
-if [ "$1" != "" ]; then
-  SERVER_ADDRESS="$1"
-else
-  # Yêu cầu địa chỉ máy chủ từ người dùng
-  read -p "Địa chỉ máy chủ (mặc định localhost): " SERVER_ADDRESS
-  SERVER_ADDRESS=${SERVER_ADDRESS:-localhost}
-fi
+print_success() {
+  echo -e "\e[1;32m[SUCCESS]\e[0m $1"
+}
 
-# Kiểm tra tham số cho cổng máy chủ
-if [ "$2" != "" ]; then
-  SERVER_PORT="$2"
-else
-  # Yêu cầu cổng máy chủ từ người dùng
-  read -p "Cổng máy chủ (mặc định 3000): " SERVER_PORT
-  SERVER_PORT=${SERVER_PORT:-3000}
-fi
+print_error() {
+  echo -e "\e[1;31m[ERROR]\e[0m $1"
+}
 
-# Kiểm tra kết nối đến máy chủ
-echo "Kiểm tra kết nối đến máy chủ $SERVER_ADDRESS:$SERVER_PORT..."
-if ! curl -s -m 5 "http://$SERVER_ADDRESS:$SERVER_PORT/" > /dev/null; then
-  echo "⚠️ Không thể kết nối đến máy chủ. Đảm bảo rằng:"
-  echo "  1. Dịch vụ đã được khởi động (systemctl status mikrotik-controller)"
-  echo "  2. Cổng $SERVER_PORT đã được mở trong firewall"
-  echo "  3. Địa chỉ máy chủ chính xác"
-  echo ""
-  read -p "Bạn có muốn tiếp tục không? (y/n): " CONTINUE
-  if [[ "$CONTINUE" != "y" && "$CONTINUE" != "Y" ]]; then
-    echo "Hủy thao tác."
-    exit 1
-  fi
-fi
+print_warning() {
+  echo -e "\e[1;33m[WARNING]\e[0m $1"
+}
 
-# Yêu cầu thông tin thiết bị từ người dùng
-read -p "Tên thiết bị: " DEVICE_NAME
-read -p "Địa chỉ IP thiết bị MikroTik: " DEVICE_IP
-read -p "Cổng API thiết bị MikroTik (mặc định 8728): " DEVICE_PORT
-DEVICE_PORT=${DEVICE_PORT:-8728}
-read -p "Tên đăng nhập thiết bị MikroTik: " DEVICE_USERNAME
-read -s -p "Mật khẩu thiết bị MikroTik: " DEVICE_PASSWORD
+# Hiển thị banner
+echo "======================================================"
+echo "         Thêm thiết bị MikroTik                      "
+echo "======================================================"
 echo ""
-read -p "Đặt làm thiết bị mặc định? (y/n): " SET_DEFAULT
-DEFAULT_FLAG="false"
-if [[ "$SET_DEFAULT" == "y" || "$SET_DEFAULT" == "Y" ]]; then
-  DEFAULT_FLAG="true"
-fi
 
-# Tạo JSON payload
-JSON_PAYLOAD="{\"name\":\"$DEVICE_NAME\",\"address\":\"$DEVICE_IP\",\"port\":$DEVICE_PORT,\"username\":\"$DEVICE_USERNAME\",\"password\":\"$DEVICE_PASSWORD\",\"isDefault\":$DEFAULT_FLAG}"
-
-echo "===== Đang thêm thiết bị vào hệ thống ====="
-echo "Thông tin thiết bị:"
-echo "- Tên: $DEVICE_NAME"
-echo "- Địa chỉ IP: $DEVICE_IP"
-echo "- Cổng: $DEVICE_PORT"
-echo "- Người dùng: $DEVICE_USERNAME"
-echo "- Mặc định: $DEFAULT_FLAG"
-
-# Gửi yêu cầu đến API
-API_URL="http://$SERVER_ADDRESS:$SERVER_PORT/api/connections"
-
-echo "Đang gửi yêu cầu đến $API_URL"
-echo "Đang thực hiện..."
-
-# Thêm thêm thông tin debug và timeout
-RESPONSE=$(curl -s -v -m 10 -X POST -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$API_URL" 2>&1)
-CURL_EXIT_CODE=$?
-
-# Kiểm tra kết quả curl
-if [ $CURL_EXIT_CODE -ne 0 ]; then
-  echo "===== Lỗi kết nối ====="
-  echo "Không thể kết nối đến API. Mã lỗi: $CURL_EXIT_CODE"
-  echo "Chi tiết:"
-  
-  if [ $CURL_EXIT_CODE -eq 7 ]; then
-    echo "  - Không thể kết nối đến máy chủ. Kiểm tra địa chỉ và cổng."
-  elif [ $CURL_EXIT_CODE -eq 28 ]; then
-    echo "  - Kết nối bị timeout. Máy chủ có thể quá tải hoặc không phản hồi."
-  fi
-  
-  echo "Thông tin debug:"
-  echo "$RESPONSE"
-  echo ""
-  echo "Vui lòng thực hiện các bước sau để kiểm tra:"
-  echo "1. Chạy 'curl -v http://$SERVER_ADDRESS:$SERVER_PORT/' để kiểm tra kết nối chung"
-  echo "2. Đảm bảo rằng dịch vụ đang chạy: 'systemctl status mikrotik-controller'"
-  echo "3. Kiểm tra logs: 'journalctl -u mikrotik-controller | tail -n 50'"
+# Kiểm tra xem người dùng đã cung cấp tham số chưa
+if [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
+  print_error "Sử dụng: $0 <tên_thiết_bị> <địa_chỉ_ip> <cổng_api> <tên_đăng_nhập> <mật_khẩu> [mặc_định]"
+  print_message "Ví dụ: $0 \"Router Chính\" 192.168.1.1 8728 admin password true"
   exit 1
 fi
 
-# Kiểm tra phản hồi API
-if [[ $RESPONSE == *"id"* ]]; then
-  echo "===== Thêm thiết bị thành công! ====="
-  echo "Thiết bị đã được thêm vào hệ thống giám sát."
-  echo "Bạn có thể truy cập dashboard tại http://$SERVER_ADDRESS:$SERVER_PORT để xem thông tin giám sát."
+# Lấy các tham số
+NAME="$1"
+ADDRESS="$2"
+PORT="$3"
+USERNAME="$4"
+PASSWORD="$5"
+IS_DEFAULT="${6:-false}"
+
+# Kiểm tra nếu là mặc định
+if [ "$IS_DEFAULT" = "true" ] || [ "$IS_DEFAULT" = "1" ] || [ "$IS_DEFAULT" = "yes" ]; then
+  IS_DEFAULT="true"
 else
-  echo "===== Lỗi khi thêm thiết bị ====="
-  echo "API trả về lỗi. Vui lòng kiểm tra:"
-  echo "1. Thông tin đăng nhập MikroTik chính xác"
-  echo "2. Thiết bị MikroTik có thể truy cập từ máy chủ"
-  echo "3. API RouterOS đã được bật trên thiết bị MikroTik"
-  echo ""
-  echo "Phản hồi API:"
-  echo "$RESPONSE"
-  
-  # Thử kiểm tra trạng thái máy chủ
-  echo ""
-  echo "Kiểm tra trạng thái máy chủ..."
-  curl -s -X GET "http://$SERVER_ADDRESS:$SERVER_PORT/api/health" || echo "Không thể kết nối đến máy chủ"
+  IS_DEFAULT="false"
 fi
+
+# Hiển thị thông tin thiết bị
+print_message "Thông tin thiết bị:"
+echo "  Tên: $NAME"
+echo "  Địa chỉ IP: $ADDRESS"
+echo "  Cổng API: $PORT"
+echo "  Tên đăng nhập: $USERNAME"
+echo "  Thiết bị mặc định: $IS_DEFAULT"
+
+# Xác nhận từ người dùng
+read -p "Bạn có muốn tiếp tục? (y/n): " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[yY]$ ]]; then
+  print_warning "Đã hủy thêm thiết bị."
+  exit 0
+fi
+
+# Kiểm tra kết nối đến router
+print_message "Đang kiểm tra kết nối đến router $ADDRESS:$PORT..."
+
+# Tạo tệp JSON tạm thời
+JSON_FILE=$(mktemp)
+cat > $JSON_FILE << EOL
+{
+  "name": "$NAME",
+  "address": "$ADDRESS",
+  "port": $PORT,
+  "username": "$USERNAME",
+  "password": "$PASSWORD",
+  "isDefault": $IS_DEFAULT
+}
+EOL
+
+# Gửi yêu cầu API để tạo kết nối
+RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" -d @$JSON_FILE http://localhost:3000/api/connections)
+rm $JSON_FILE
+
+# Kiểm tra phản hồi
+if [[ $RESPONSE == *"id"* ]]; then
+  ID=$(echo $RESPONSE | grep -o '"id":[^,}]*' | sed 's/"id"://')
+  print_success "Đã thêm thiết bị thành công với ID: $ID"
+  print_message "Bạn có thể truy cập thiết bị tại http://localhost/devices"
+else
+  print_error "Không thể thêm thiết bị. Phản hồi:"
+  echo $RESPONSE | json_pp
+  exit 1
+fi
+
+echo ""
+print_message "Để kiểm tra trạng thái kết nối, hãy sử dụng:"
+echo "  curl http://localhost:3000/api/connections/$ID/status"
+
+print_message "Để lấy thông tin tài nguyên router, hãy sử dụng:"
+echo "  curl http://localhost:3000/api/connections/$ID/resources"
+
+print_message "Để ngắt kết nối, hãy sử dụng:"
+echo "  curl -X POST http://localhost:3000/api/connections/$ID/disconnect"
+
+echo ""
+print_success "Hoàn tất!"

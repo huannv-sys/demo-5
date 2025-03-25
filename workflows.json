@@ -1,17 +1,6 @@
 {
-  "commands": {
-    "server": {
-      "cwd": "/",
-      "command": "USE_REAL_MIKROTIK_API=true npm run dev",
-      "previews": {
-        "webview1": {
-          "outputType": "webview",
-          "preferredPort": 3000
-        }
-      }
-    }
-  },
-  "replit": {
-    "commands": []
+  "server": {
+    "run": "node server.js",
+    "persistent": true
   }
 }

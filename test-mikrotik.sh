@@ -1,137 +1,141 @@
 #!/bin/bash
 
-# Script kiểm tra kết nối đến MikroTik Controller
-# Phiên bản: 1.0
+# Script kiểm tra kết nối MikroTik
+# Sử dụng routeros-client trực tiếp để kiểm tra
 
-# Đặt màu cho output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Hàm hiển thị tiêu đề
-print_header() {
-  echo -e "${BLUE}===== $1 =====${NC}"
+# Hàm hiển thị thông báo
+print_message() {
+  echo -e "\e[1;34m[INFO]\e[0m $1"
 }
 
-# Hàm hiển thị thông báo thành công
 print_success() {
-  echo -e "${GREEN}✅ $1${NC}"
+  echo -e "\e[1;32m[SUCCESS]\e[0m $1"
 }
 
-# Hàm hiển thị cảnh báo
-print_warning() {
-  echo -e "${YELLOW}⚠️ $1${NC}"
-}
-
-# Hàm hiển thị lỗi
 print_error() {
-  echo -e "${RED}❌ $1${NC}"
+  echo -e "\e[1;31m[ERROR]\e[0m $1"
 }
 
-# Lấy địa chỉ IP máy chủ
-SERVER_IP=$(hostname -I | awk '{print $1}')
-DOMAIN="localhost"
+print_warning() {
+  echo -e "\e[1;33m[WARNING]\e[0m $1"
+}
 
-print_header "Kiểm tra MikroTik Controller"
-echo -e "Địa chỉ máy chủ: ${GREEN}$SERVER_IP${NC}"
-
-# Kiểm tra các dịch vụ có đang chạy không
+# Hiển thị banner
+echo "======================================================"
+echo "         Kiểm tra kết nối MikroTik                   "
+echo "======================================================"
 echo ""
-print_header "Kiểm tra trạng thái dịch vụ"
 
-echo "MikroTik Controller:"
-systemctl is-active --quiet mikrotik-controller
-if [ $? -eq 0 ]; then
-    print_success "Dịch vụ MikroTik Controller đang chạy"
-else
-    print_error "Dịch vụ MikroTik Controller không chạy"
-    echo "Thử khởi động lại dịch vụ:"
-    echo "sudo systemctl restart mikrotik-controller"
+# Kiểm tra xem người dùng đã cung cấp tham số chưa
+if [ "$#" -lt 3 ]; then
+  print_error "Sử dụng: $0 <địa_chỉ_ip> <tên_đăng_nhập> <mật_khẩu> [cổng_api]"
+  print_message "Ví dụ: $0 192.168.1.1 admin password 8728"
+  exit 1
 fi
 
+# Lấy các tham số
+ADDRESS="$1"
+USERNAME="$2"
+PASSWORD="$3"
+PORT="${4:-8728}"
+
+# Hiển thị thông tin kết nối
+print_message "Thông tin kết nối:"
+echo "  Địa chỉ IP: $ADDRESS"
+echo "  Cổng API: $PORT"
+echo "  Tên đăng nhập: $USERNAME"
 echo ""
-echo "Nginx:"
-systemctl is-active --quiet nginx
-if [ $? -eq 0 ]; then
-    print_success "Dịch vụ Nginx đang chạy"
-else
-    print_error "Dịch vụ Nginx không chạy"
-    echo "Thử khởi động lại dịch vụ:"
-    echo "sudo systemctl restart nginx"
+
+# Tạo script kiểm tra kết nối
+TEMP_JS=$(mktemp)
+cat > $TEMP_JS << EOL
+const { RouterOSAPI } = require('routeros-client');
+
+async function testConnection() {
+  const api = new RouterOSAPI({
+    host: '$ADDRESS',
+    port: $PORT,
+    user: '$USERNAME',
+    password: '$PASSWORD',
+    timeout: 5000,
+  });
+
+  try {
+    console.log('Đang kết nối đến MikroTik...');
+    await api.connect();
+    console.log('Kết nối thành công!');
+    
+    console.log('\nĐang lấy thông tin hệ thống...');
+    const resources = await api.write('/system/resource/print');
+    console.log('Thông tin hệ thống:');
+    console.log(JSON.stringify(resources[0], null, 2));
+    
+    console.log('\nĐang lấy danh sách interfaces...');
+    const interfaces = await api.write('/interface/print');
+    console.log('Số lượng interfaces:', interfaces.length);
+    
+    // Hiển thị 3 interface đầu tiên
+    for (let i = 0; i < Math.min(3, interfaces.length); i++) {
+      console.log('Interface', i + 1, ':', interfaces[i].name, 
+                 '(Loại:', interfaces[i].type, 
+                 ', Trạng thái:', interfaces[i].running === 'true' ? 'Đang chạy' : 'Dừng',
+                 ')');
+    }
+    
+    console.log('\nĐang ngắt kết nối...');
+    await api.close();
+    console.log('Đã ngắt kết nối!');
+    
+    process.exit(0);
+  } catch (error) {
+    console.error('Lỗi:', error.message);
+    if (api) {
+      try {
+        await api.close();
+      } catch (closeError) {
+        // Ignore close errors
+      }
+    }
+    process.exit(1);
+  }
+}
+
+testConnection();
+EOL
+
+# Kiểm tra xem routeros-client đã được cài đặt chưa
+if ! npm list -g routeros-client > /dev/null 2>&1; then
+  print_warning "Gói routeros-client chưa được cài đặt, đang cài đặt..."
+  npm install -g routeros-client
+  if [ $? -ne 0 ]; then
+    print_error "Không thể cài đặt routeros-client. Vui lòng cài đặt thủ công: npm install -g routeros-client"
+    rm $TEMP_JS
+    exit 1
+  fi
+  print_success "Đã cài đặt routeros-client"
 fi
 
-# Kiểm tra cổng 5000 (MikroTik API)
-echo ""
-print_header "Kiểm tra cổng 5000 (MikroTik API)"
-nc -z -v -w5 localhost 5000 2>&1
+# Chạy script kiểm tra
+print_message "Đang kiểm tra kết nối đến $ADDRESS:$PORT..."
+node $TEMP_JS
+
+# Kiểm tra kết quả
 if [ $? -eq 0 ]; then
-    print_success "Cổng 5000 đang mở"
+  print_success "Kiểm tra hoàn tất. Kết nối thành công!"
 else
-    print_error "Cổng 5000 không mở hoặc không thể kết nối"
-    echo "Kiểm tra xem ứng dụng đã được cấu hình để chạy trên cổng 5000 chưa"
+  print_error "Kiểm tra thất bại. Không thể kết nối đến router!"
+  print_warning "Vui lòng kiểm tra lại các thông tin sau:"
+  echo "  1. Địa chỉ IP và cổng API chính xác"
+  echo "  2. Tên đăng nhập và mật khẩu chính xác"
+  echo "  3. API service đã được bật trên router"
+  echo "  4. Tường lửa cho phép kết nối đến cổng API"
 fi
 
-# Kiểm tra cổng 80 (Nginx)
-echo ""
-print_header "Kiểm tra cổng 80 (Nginx)"
-nc -z -v -w5 localhost 80 2>&1
-if [ $? -eq 0 ]; then
-    print_success "Cổng 80 đang mở"
-else
-    print_error "Cổng 80 không mở hoặc không thể kết nối"
-    echo "Kiểm tra Nginx có đang chạy không:"
-    echo "sudo systemctl status nginx"
-fi
-
-# Kiểm tra kết nối HTTP
-echo ""
-print_header "Kiểm tra kết nối HTTP"
-
-echo "Truy cập trực tiếp (cổng 5000):"
-curl -s -o /dev/null -w "%{http_code}" http://localhost:5000
-if [ $? -eq 0 ]; then
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)
-    if [ "$HTTP_CODE" = "200" ]; then
-        print_success "Kết nối thành công đến http://localhost:5000 (HTTP 200)"
-    else
-        print_warning "Kết nối đến http://localhost:5000 trả về mã HTTP $HTTP_CODE"
-    fi
-else
-    print_error "Không thể kết nối đến http://localhost:5000"
-fi
+# Xóa script tạm
+rm $TEMP_JS
 
 echo ""
-echo "Thông qua Nginx (cổng 80):"
-curl -s -o /dev/null -w "%{http_code}" http://localhost
-if [ $? -eq 0 ]; then
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
-    if [ "$HTTP_CODE" = "200" ]; then
-        print_success "Kết nối thành công đến http://localhost (HTTP 200)"
-    else
-        print_warning "Kết nối đến http://localhost trả về mã HTTP $HTTP_CODE"
-    fi
-else
-    print_error "Không thể kết nối đến http://localhost"
-fi
-
-# Kiểm tra logs
-echo ""
-print_header "Kiểm tra logs"
-
-echo "MikroTik Controller logs (5 dòng gần nhất):"
-journalctl -u mikrotik-controller -n 5 --no-pager
+print_message "Để kiểm tra kết nối thông qua API backend, hãy sử dụng:"
+echo "  ./add_mikrotik_device.sh \"Tên thiết bị\" $ADDRESS $PORT $USERNAME $PASSWORD"
 
 echo ""
-echo "Nginx logs (5 dòng gần nhất):"
-journalctl -u nginx -n 5 --no-pager
-
-# Thông tin tổng kết
-echo ""
-print_header "Thông tin truy cập"
-echo "Truy cập ứng dụng tại:"
-echo "- Local: ${GREEN}http://localhost${NC}"
-echo "- Mạng nội bộ: ${GREEN}http://$SERVER_IP${NC}"
-echo ""
-echo "Nếu gặp lỗi, vui lòng kiểm tra hướng dẫn khắc phục sự cố trong file troubleshooting.md"

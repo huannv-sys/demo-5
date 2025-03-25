@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cảnh báo MikroTik</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .header {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+        .content {
+            padding: 0 15px;
+        }
+        .device-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            border-left: 4px solid #4d79ff;
+        }
+        .alert-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            border-left: 4px solid #ff4d4d;
+        }
+        .details-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            border-left: 4px solid #4dff88;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        table td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+        .timestamp {
+            text-align: right;
+            font-size: 12px;
+            color: #777;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cảnh báo MikroTik</h1>
+        </div>
+        <div class="content">
+            <div class="device-info">
+                <h2>Thông tin thiết bị</h2>
+                <table>
+                    <tr>
+                        <td>Tên thiết bị:</td>
+                        <td>{{ device_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Loại cảnh báo:</td>
+                        <td>{{ alert_type }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="alert-info">
+                <h2>Nội dung cảnh báo</h2>
+                <p>{{ alert_message }}</p>
+            </div>
+            
+            {% if details %}
+            <div class="details-box">
+                <h2>Chi tiết</h2>
+                <table>
+                    {% for key, value in details.items() %}
+                    <tr>
+                        <td>{{ key }}:</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            {% endif %}
+            
+            <div class="timestamp">
+                Cảnh báo được gửi {{ timestamp }}
+            </div>
+        </div>
+        <div class="footer">
+            <p>Email này được gửi tự động từ hệ thống MikroTik Monitor. Vui lòng không trả lời email này.</p>
+        </div>
+    </div>
+</body>
+</html>

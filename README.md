@@ -1,80 +1,116 @@
-# MikroTik Controller - Hệ thống giám sát Router MikroTik
+# MikroTik Controller
 
-Hệ thống giám sát và quản lý thiết bị MikroTik được phát triển trên máy chủ Ubuntu, cung cấp các công cụ quản lý và theo dõi hiệu quả với khả năng mở rộng và xử lý lỗi.
+Hệ thống giám sát và quản lý thiết bị MikroTik, cung cấp các công cụ quản lý hiệu quả với khả năng mở rộng. Dự án này được thiết kế để chạy trên máy chủ Ubuntu, cung cấp giao diện web và các công cụ dòng lệnh để giám sát nhiều thiết bị MikroTik cùng lúc.
 
 ## Tính năng chính
 
-- **Giám sát trực tiếp**: Kết nối trực tiếp đến API của RouterOS
-- **Quản lý nhiều thiết bị**: Thêm, sửa và xóa nhiều thiết bị MikroTik
-- **Dashboard trực quan**: Xem thông tin tổng quan hệ thống
-- **Giám sát tài nguyên**: CPU, RAM, dung lượng đĩa và thời gian hoạt động
-- **Quản lý interface**: Xem và quản lý tất cả giao diện mạng
-- **Mạng không dây**: Giám sát mạng WiFi và các client kết nối
-- **Firewall**: Quản lý các quy tắc tường lửa
-- **Logs**: Xem nhật ký hệ thống
+- Kết nối đến API RouterOS của MikroTik
+- Giám sát tài nguyên hệ thống (CPU, RAM, HDD)
+- Giám sát và quản lý interfaces
+- Hiển thị thông tin thiết bị và trạng thái
+- Hỗ trợ nhiều thiết bị MikroTik
+- Công cụ giám sát qua dòng lệnh
+- API RESTful cho tích hợp với các ứng dụng khác
 
-## Cài đặt
+## Yêu cầu hệ thống
 
-### Yêu cầu hệ thống
+- Ubuntu 20.04 LTS hoặc mới hơn
+- Node.js 20.x hoặc mới hơn
+- Python 3.8 hoặc mới hơn (cho công cụ giám sát)
+- PostgreSQL 12 hoặc mới hơn
+- Nginx (cho triển khai)
 
-- Ubuntu 24.04 (hoặc cao hơn)
-- Node.js 20+
-- PostgreSQL
+## Cài đặt nhanh
 
-### Cài đặt tự động
-
-Cách đơn giản nhất để cài đặt là sử dụng script cài đặt tự động:
+Sử dụng script cài đặt tự động:
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/huannv-sys/demo2.0/main/install.sh
-chmod +x install.sh
 sudo ./install.sh
 ```
 
-Script sẽ tự động:
-1. Cài đặt các phụ thuộc cần thiết
+Script này sẽ:
+1. Cài đặt các gói phụ thuộc
 2. Cấu hình PostgreSQL
-3. Tải mã nguồn từ GitHub
-4. Cấu hình và khởi động dịch vụ
+3. Cài đặt Nginx
+4. Tạo dịch vụ systemd
+5. Khởi động ứng dụng
 
-### Thêm thiết bị MikroTik
+## Thêm thiết bị MikroTik
 
-Sau khi cài đặt, bạn có thể thêm thiết bị MikroTik bằng lệnh:
+Có hai cách để thêm thiết bị:
+
+### Sử dụng giao diện web
+
+Truy cập http://your-server-ip/ và sử dụng giao diện web để thêm thiết bị.
+
+### Sử dụng script
 
 ```bash
-add-mikrotik
+sudo ./add_mikrotik_device.sh "Tên thiết bị" "Địa chỉ IP" "Cổng API" "Tên đăng nhập" "Mật khẩu" "Mặc định"
 ```
 
-hoặc với tham số:
-
+Ví dụ:
 ```bash
-add-mikrotik <địa_chỉ_máy_chủ> <cổng>
+sudo ./add_mikrotik_device.sh "Router Chính" "192.168.1.1" "8728" "admin" "password" "true"
 ```
 
-### Khởi động lại dịch vụ
+## Giám sát qua dòng lệnh
 
-Nếu cần khởi động lại dịch vụ:
+Sử dụng công cụ giám sát Python:
 
 ```bash
-restart-mikrotik-controller
+python mikrotik_monitor.py
+```
+
+Các tùy chọn:
+- `--interval SECONDS`: Đặt khoảng thời gian làm mới (mặc định: 5 giây)
+- `--router ID`: Chọn router để giám sát (mặc định: 1)
+
+## Kiểm tra kết nối
+
+Để kiểm tra kết nối đến thiết bị MikroTik:
+
+```bash
+sudo ./test-mikrotik.sh "Địa chỉ IP" "Tên đăng nhập" "Mật khẩu" "Cổng API"
+```
+
+## Quản lý dịch vụ
+
+### Khởi động dịch vụ
+
+```bash
+sudo systemctl start mikrotik-controller
+```
+
+### Kiểm tra trạng thái
+
+```bash
+sudo systemctl status mikrotik-controller
+```
+
+### Xem nhật ký
+
+```bash
+sudo journalctl -u mikrotik-controller -f
 ```
 
 ## Khắc phục sự cố
 
-### Kết nối đến thiết bị MikroTik
+Tham khảo [hướng dẫn khắc phục sự cố](troubleshooting.md) để biết thêm chi tiết.
 
-1. Đảm bảo API RouterOS đã được bật trên thiết bị MikroTik
-2. Kiểm tra cổng API (mặc định 8728)
-3. Kiểm tra quyền người dùng MikroTik có đủ để truy cập API
+## API Endpoints
 
-### Lỗi dịch vụ
+- `GET /api/status`: Kiểm tra trạng thái API
+- `GET /api/connections`: Danh sách thiết bị
+- `POST /api/connections`: Thêm thiết bị mới
+- `POST /api/connections/:id/connect`: Kết nối đến thiết bị
+- `GET /api/connections/:id/resources`: Thông tin tài nguyên
+- `GET /api/connections/:id/interfaces`: Danh sách interfaces
 
-Kiểm tra logs hệ thống:
+## Đóng góp
 
-```bash
-journalctl -u mikrotik-controller -f
-```
+Vui lòng tạo issue hoặc pull request trên GitHub repository.
 
-## Thông tin thêm
+## Giấy phép
 
-- Source code: [https://github.com/huannv-sys/demo2.0](https://github.com/huannv-sys/demo2.0)
+Dự án này được phân phối dưới giấy phép MIT.

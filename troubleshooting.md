@@ -1,203 +1,301 @@
-# Hướng dẫn khắc phục sự cố MikroTik Controller
+# Hướng dẫn khắc phục sự cố
 
-Tài liệu này cung cấp hướng dẫn để giải quyết các vấn đề thường gặp khi cài đặt và vận hành MikroTik Controller.
+Tài liệu này cung cấp giải pháp cho các vấn đề thường gặp khi sử dụng MikroTik Controller.
 
 ## Mục lục
+1. [Lỗi kết nối đến thiết bị MikroTik](#lỗi-kết-nối-đến-thiết-bị-mikrotik)
+2. [Lỗi cơ sở dữ liệu](#lỗi-cơ-sở-dữ-liệu)
+3. [Lỗi khởi động dịch vụ](#lỗi-khởi-động-dịch-vụ)
+4. [Lỗi giao diện web](#lỗi-giao-diện-web)
+5. [Lỗi cấu hình Nginx](#lỗi-cấu-hình-nginx)
+6. [Công cụ khắc phục sự cố](#công-cụ-khắc-phục-sự-cố)
 
-1. [Vấn đề kết nối tới MikroTik](#vấn-đề-kết-nối-tới-mikrotik)
-2. [Vấn đề với cơ sở dữ liệu PostgreSQL](#vấn-đề-với-cơ-sở-dữ-liệu-postgresql)
-3. [Vấn đề với dịch vụ (Service)](#vấn-đề-với-dịch-vụ-service)
-4. [Vấn đề với Nginx](#vấn-đề-với-nginx)
-5. [Vấn đề với API](#vấn-đề-với-api)
+## Lỗi kết nối đến thiết bị MikroTik
 
-## Vấn đề kết nối tới MikroTik
+### Không thể kết nối đến API RouterOS
 
-### Không thể kết nối đến thiết bị MikroTik
+**Triệu chứng:** Không thể kết nối, nhận thông báo lỗi "Connection timed out" hoặc "Connection refused".
 
-Nếu bạn không thể kết nối đến thiết bị MikroTik, hãy kiểm tra:
+**Giải pháp:**
 
-1. **Địa chỉ IP và cổng chính xác**: Đảm bảo địa chỉ IP và cổng API (mặc định là 8728) là chính xác.
+1. Kiểm tra địa chỉ IP:
    ```bash
-   ping <địa_chỉ_ip>
+   ping <địa_chỉ_ip_của_router>
    ```
 
-2. **Tên đăng nhập và mật khẩu**: Xác nhận tên đăng nhập và mật khẩu chính xác.
-
-3. **API service được bật**: Đảm bảo API service đã được bật trên thiết bị MikroTik.
-   - Truy cập vào WebFig hoặc WinBox
-   - Vào IP -> Services
-   - Đảm bảo api service được bật (Enabled)
-
-4. **Tường lửa**: Kiểm tra xem tường lửa có chặn kết nối đến cổng API không.
-   - Kiểm tra trên MikroTik (IP -> Firewall -> Filter Rules)
-   - Kiểm tra tường lửa trên máy chủ:
-     ```bash
-     sudo ufw status
-     ```
-
-5. **Sử dụng công cụ kiểm tra**:
+2. Kiểm tra cổng API:
    ```bash
-   sudo ./test-mikrotik.sh <địa_chỉ_ip> <tên_đăng_nhập> <mật_khẩu> [cổng_api]
+   telnet <địa_chỉ_ip_của_router> <cổng_API>
+   ```
+   Cổng mặc định thường là 8728 cho API không bảo mật và 8729 cho API bảo mật (SSL).
+
+3. Kiểm tra tường lửa trên router, đảm bảo cổng API đã được mở:
+   - Đăng nhập vào router qua Winbox hoặc WebFig
+   - Đi đến IP -> Firewall -> Filter Rules
+   - Kiểm tra các quy tắc cho cổng API (8728/8729)
+
+4. Kiểm tra tường lửa trên máy chủ:
+   ```bash
+   sudo ufw status
+   # Nếu cần, mở cổng
+   sudo ufw allow <cổng_API>/tcp
    ```
 
-### Lỗi "connection timed out"
+### Lỗi xác thực API
 
-Nếu bạn gặp lỗi "connection timed out":
+**Triệu chứng:** Kết nối đến router nhưng nhận lỗi "Invalid username or password".
 
-1. Kiểm tra kết nối mạng giữa máy chủ và thiết bị MikroTik
-2. Kiểm tra tường lửa trên MikroTik và máy chủ
-3. Kiểm tra xem cổng API có mở không
+**Giải pháp:**
 
-## Vấn đề với cơ sở dữ liệu PostgreSQL
+1. Kiểm tra đúng tên người dùng và mật khẩu
+2. Đảm bảo tài khoản có quyền truy cập API:
+   - Đăng nhập vào router
+   - Đi đến System -> Users
+   - Kiểm tra quyền (Policy) của tài khoản, đảm bảo có "api" và "read"
 
-### Lỗi kết nối đến PostgreSQL
+### Lỗi SSL/TLS
 
-Nếu ứng dụng không thể kết nối đến PostgreSQL:
+**Triệu chứng:** Lỗi liên quan đến SSL khi kết nối đến API bảo mật.
 
-1. **Kiểm tra dịch vụ PostgreSQL**:
+**Giải pháp:**
+1. Kiểm tra cấu hình API:
+   ```bash
+   # Sử dụng cổng không SSL trước
+   ./test-mikrotik.sh "<địa_chỉ_ip>" "<tên_đăng_nhập>" "<mật_khẩu>" "8728"
+   ```
+
+2. Nếu bạn cần sử dụng API bảo mật, hãy đảm bảo chứng chỉ SSL của router hợp lệ
+
+## Lỗi cơ sở dữ liệu
+
+### Không thể kết nối đến PostgreSQL
+
+**Triệu chứng:** Lỗi "Connection refused" khi cố gắng kết nối đến PostgreSQL.
+
+**Giải pháp:**
+
+1. Kiểm tra dịch vụ PostgreSQL:
    ```bash
    sudo systemctl status postgresql
+   # Nếu không chạy
+   sudo systemctl start postgresql
    ```
 
-2. **Khởi động lại PostgreSQL nếu cần**:
+2. Kiểm tra URL kết nối trong file .env:
+   ```
+   DATABASE_URL=postgresql://username:password@localhost:5432/mikrotik_controller
+   ```
+
+3. Kiểm tra quyền truy cập:
    ```bash
-   sudo systemctl restart postgresql
+   sudo -u postgres psql -c "ALTER USER username WITH PASSWORD 'password';"
+   sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mikrotik_controller TO username;"
    ```
 
-3. **Kiểm tra quyền truy cập**:
-   ```bash
-   sudo -u postgres psql -c "\du"
-   ```
+### Lỗi cấu trúc cơ sở dữ liệu
 
-4. **Xác nhận cấu hình kết nối**:
-   Kiểm tra file .env có chuỗi kết nối đúng không:
-   ```
-   DATABASE_URL=postgres://mikrouser:4mRQ86Gkv1TuuR8f@localhost:5432/mikrotik_controller
-   ```
+**Triệu chứng:** Lỗi "relation does not exist" khi truy vấn.
 
-5. **Cấp quyền superuser cho người dùng nếu cần**:
-   ```bash
-   sudo -u postgres psql -c "ALTER USER mikrouser WITH SUPERUSER;"
-   ```
+**Giải pháp:**
 
-## Vấn đề với dịch vụ (Service)
+Tạo lại bảng nếu cần:
 
-### Dịch vụ không khởi động
+```bash
+# Kết nối đến cơ sở dữ liệu
+sudo -u postgres psql mikrotik_controller
 
-Nếu dịch vụ mikrotik-controller không khởi động:
+# Tạo bảng router_connections nếu chưa tồn tại
+CREATE TABLE IF NOT EXISTS router_connections (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  port INTEGER NOT NULL DEFAULT 8728,
+  username VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  last_connected TIMESTAMP
+);
 
-1. **Kiểm tra trạng thái**:
+# Tạo bảng log_entries nếu chưa tồn tại
+CREATE TABLE IF NOT EXISTS log_entries (
+  id SERIAL PRIMARY KEY,
+  router_id INTEGER NOT NULL,
+  message TEXT NOT NULL,
+  level VARCHAR(50) NOT NULL DEFAULT 'info',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (router_id) REFERENCES router_connections(id) ON DELETE CASCADE
+);
+```
+
+## Lỗi khởi động dịch vụ
+
+### Dịch vụ không thể khởi động
+
+**Triệu chứng:** Lỗi khi chạy `systemctl start mikrotik-controller`.
+
+**Giải pháp:**
+
+1. Kiểm tra cấu hình dịch vụ:
    ```bash
    sudo systemctl status mikrotik-controller
+   sudo journalctl -u mikrotik-controller
    ```
 
-2. **Xem nhật ký (logs)**:
+2. Kiểm tra quyền:
    ```bash
-   sudo journalctl -u mikrotik-controller --since today
+   sudo chown -R <user>:<group> /opt/mikrotik-controller
+   sudo chmod +x /opt/mikrotik-controller/*.sh
    ```
 
-3. **Kiểm tra tệp service**:
+3. Kiểm tra môi trường Node.js:
    ```bash
-   sudo cat /etc/systemd/system/mikrotik-controller.service
+   node -v  # Đảm bảo phiên bản >= 20.x
+   npm -v
    ```
 
-4. **Khởi động lại dịch vụ**:
+4. Thử chạy ứng dụng trực tiếp:
    ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl restart mikrotik-controller
+   cd /opt/mikrotik-controller
+   node server.mjs
    ```
 
-5. **Kiểm tra quyền của thư mục cài đặt**:
+### Lỗi kết nối cổng
+
+**Triệu chứng:** Lỗi "Port already in use".
+
+**Giải pháp:**
+
+1. Kiểm tra cổng đang sử dụng:
    ```bash
-   ls -la /opt/mikrotik-controller
+   sudo lsof -i :3000
    ```
 
-## Vấn đề với Nginx
-
-### Không thể truy cập qua port 80
-
-Nếu bạn không thể truy cập ứng dụng qua port 80:
-
-1. **Kiểm tra trạng thái Nginx**:
+2. Kết thúc tiến trình nếu cần:
    ```bash
-   sudo systemctl status nginx
+   sudo kill <PID>
    ```
 
-2. **Xem nhật ký Nginx**:
+3. Thay đổi cổng trong file .env:
+   ```
+   PORT=3001
+   ```
+
+## Lỗi giao diện web
+
+### Không thể truy cập giao diện web
+
+**Triệu chứng:** Lỗi "Connection refused" hoặc không thể tải trang.
+
+**Giải pháp:**
+
+1. Kiểm tra ứng dụng đang chạy:
    ```bash
-   sudo tail -f /var/log/nginx/error.log
+   sudo systemctl status mikrotik-controller
+   # Hoặc kiểm tra bằng PID
+   cat /opt/mikrotik-controller/server.pid
+   ps -p $(cat /opt/mikrotik-controller/server.pid)
    ```
 
-3. **Kiểm tra cấu hình Nginx**:
+2. Kiểm tra tường lửa:
+   ```bash
+   sudo ufw status
+   sudo ufw allow 3000/tcp  # Hoặc cổng bạn đã cấu hình
+   ```
+
+3. Kiểm tra khả năng kết nối từ bên ngoài:
+   ```bash
+   # Đảm bảo server đang lắng nghe trên tất cả các giao diện (0.0.0.0)
+   sudo netstat -tulpn | grep node
+   ```
+
+### Giao diện web hiển thị lỗi
+
+**Triệu chứng:** Trang web tải nhưng hiển thị lỗi JavaScript.
+
+**Giải pháp:**
+
+1. Kiểm tra log:
+   ```bash
+   tail -f /opt/mikrotik-controller/server.log
+   ```
+
+2. Làm mới bộ nhớ cache trình duyệt:
+   - Nhấn Ctrl+F5 trong trình duyệt
+   - Hoặc xóa bộ nhớ cache trong cài đặt trình duyệt
+
+## Lỗi cấu hình Nginx
+
+### Nginx không thể kết nối đến ứng dụng
+
+**Triệu chứng:** Lỗi 502 Bad Gateway khi truy cập qua Nginx.
+
+**Giải pháp:**
+
+1. Kiểm tra cấu hình Nginx:
+   ```bash
+   sudo nano /etc/nginx/sites-available/mikrotik-controller
+   ```
+
+2. Đảm bảo cấu hình proxy_pass chính xác:
+   ```
+   location / {
+       proxy_pass http://localhost:3000;
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection 'upgrade';
+       proxy_set_header Host $host;
+       proxy_cache_bypass $http_upgrade;
+   }
+   ```
+
+3. Kiểm tra cú pháp và khởi động lại Nginx:
    ```bash
    sudo nginx -t
-   ```
-
-4. **Khởi động lại Nginx**:
-   ```bash
    sudo systemctl restart nginx
    ```
 
-5. **Kiểm tra port**:
-   ```bash
-   sudo netstat -tulpn | grep 80
-   ```
+## Công cụ khắc phục sự cố
 
-6. **Cấu hình lại Nginx**:
-   ```bash
-   sudo ./configure-nginx.sh
-   ```
+### Công cụ kiểm tra kết nối
 
-## Vấn đề với API
+Để kiểm tra kết nối đến thiết bị MikroTik:
 
-### API không phản hồi
+```bash
+./test-mikrotik.sh "địa_chỉ_ip" "tên_đăng_nhập" "mật_khẩu" "cổng"
+```
 
-Nếu API không phản hồi:
+### Kiểm tra cơ sở dữ liệu
 
-1. **Kiểm tra xem ứng dụng có đang chạy không**:
-   ```bash
-   sudo systemctl status mikrotik-controller
-   ```
+Kiểm tra lược đồ cơ sở dữ liệu:
 
-2. **Kiểm tra port API**:
-   ```bash
-   sudo netstat -tulpn | grep 3000
-   ```
+```bash
+sudo -u postgres psql mikrotik_controller -c "\d"
+```
 
-3. **Kiểm tra nhật ký (logs)**:
-   ```bash
-   sudo journalctl -u mikrotik-controller -f
-   ```
+Kiểm tra thiết bị trong cơ sở dữ liệu:
 
-4. **Kiểm tra kết nối trực tiếp**:
-   ```bash
-   curl http://localhost:3000/api/status
-   ```
+```bash
+sudo -u postgres psql mikrotik_controller -c "SELECT * FROM router_connections;"
+```
 
-5. **Khởi động lại dịch vụ**:
-   ```bash
-   sudo systemctl restart mikrotik-controller
-   ```
+### Khởi động lại hoàn toàn
 
-### API trả về lỗi
+Để khởi động lại toàn bộ dịch vụ:
 
-Nếu API trả về lỗi:
+```bash
+sudo systemctl restart postgresql
+sudo systemctl restart nginx
+sudo systemctl restart mikrotik-controller
+```
 
-1. **Kiểm tra nhật ký để biết thêm chi tiết**:
-   ```bash
-   sudo journalctl -u mikrotik-controller -f
-   ```
+### Xem nhật ký thời gian thực
 
-2. **Kiểm tra kết nối cơ sở dữ liệu**:
-   ```bash
-   sudo -u postgres psql -d mikrotik_controller -c "SELECT NOW();"
-   ```
+```bash
+tail -f /opt/mikrotik-controller/server.log
+```
 
-3. **Kiểm tra biến môi trường**:
-   ```bash
-   grep -v '^#' /opt/mikrotik-controller/.env
-   ```
+hoặc
 
----
-
-Nếu bạn vẫn gặp vấn đề sau khi thử các biện pháp trên, vui lòng liên hệ với đội hỗ trợ hoặc tạo issue trên GitHub repository.
+```bash
+sudo journalctl -u mikrotik-controller -f
+```

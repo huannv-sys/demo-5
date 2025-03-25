@@ -1,6 +1,6 @@
 {
   "server": {
-    "run": "node server.js",
+    "run": "node server.mjs",
     "persistent": true
   }
 }

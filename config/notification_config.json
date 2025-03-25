@@ -1,0 +1,46 @@
+{
+    "enabled": true,
+    "channels": {
+        "email": {
+            "enabled": true,
+            "recipients": []
+        },
+        "sms": {
+            "enabled": true,
+            "recipients": []
+        }
+    },
+    "alert_types": {
+        "connection_lost": {
+            "enabled": true,
+            "channels": ["email", "sms"],
+            "message": "Mất kết nối đến thiết bị",
+            "priority": "high"
+        },
+        "high_cpu": {
+            "enabled": true,
+            "channels": ["email"],
+            "threshold": 80,
+            "message": "Tải CPU cao",
+            "priority": "medium"
+        },
+        "high_memory": {
+            "enabled": true,
+            "channels": ["email"],
+            "threshold": 80,
+            "message": "Sử dụng bộ nhớ cao",
+            "priority": "medium"
+        },
+        "interface_down": {
+            "enabled": true,
+            "channels": ["email", "sms"],
+            "message": "Interface ngừng hoạt động",
+            "priority": "high"
+        },
+        "custom": {
+            "enabled": true,
+            "channels": ["email"],
+            "priority": "medium"
+        }
+    }
+}

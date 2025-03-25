@@ -1,135 +1,119 @@
-body {
-  background-color: #121212;
-  color: #e0e0e0;
-}
+/* Custom CSS cho MikroTik Controller */
 
-.card {
-  background-color: #1e1e1e;
-  border-color: #333;
-}
-
-.form-control, .form-select {
-  background-color: #2d2d2d;
-  border-color: #444;
-  color: #e0e0e0;
-}
-
-.form-control:focus, .form-select:focus {
-  background-color: #2d2d2d;
-  color: #e0e0e0;
-  border-color: #666;
-  box-shadow: 0 0 0 0.25rem rgba(66, 70, 73, 0.5);
-}
-
-.list-group-item {
-  background-color: #2d2d2d;
-  color: #e0e0e0;
-  border-color: #444;
-}
-
-.list-group-item:hover {
-  background-color: #3d3d3d;
-}
-
-.text-success {
-  color: #4caf50 !important;
-}
-
-.text-danger {
-  color: #f44336 !important;
-}
-
-.text-warning {
-  color: #ff9800 !important;
-}
-
-.text-info {
-  color: #03a9f4 !important;
-}
-
-code {
-  background-color: #333;
-  color: #e0e0e0;
-  padding: 2px 4px;
-  border-radius: 4px;
-}
-
-pre {
-  background-color: #333;
-  color: #e0e0e0;
-  padding: 1rem;
-  border-radius: 4px;
-  white-space: pre-wrap;
+/* Định dạng cho khu vực hiển thị kết quả */
+.result-area {
+  background-color: #222;
+  color: #eee;
+  font-family: monospace;
+  padding: 10px;
+  border-radius: 5px;
+  min-height: 200px;
   max-height: 400px;
   overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.router-card {
-  transition: all 0.3s ease;
+/* Định dạng card thống kê */
+.card-title {
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.router-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.connection-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  background-color: #2d2d2d;
-  border: 1px solid #444;
-}
-
-.connection-item:hover {
-  background-color: #3d3d3d;
-}
-
-.connection-item .actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
+.stat-value {
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
-.status-connected {
-  background-color: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.5);
+.card-footer {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
 }
 
-.status-disconnected {
-  background-color: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.5);
+/* Định dạng Badge trạng thái */
+.badge-status {
+  font-size: 85%;
+  padding: 5px 7px;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Animation xoay cho biểu tượng làm mới */
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #1e1e1e;
+/* Hiệu ứng khi hover lên hàng bảng */
+.table tbody tr {
+  transition: background-color 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 4px;
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.1);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #777;
+/* Định dạng cho công cụ nhật ký */
+.log-time {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+.log-info {
+  color: #17a2b8;
+}
+
+.log-success {
+  color: #28a745;
+}
+
+.log-warning {
+  color: #ffc107;
+}
+
+.log-error {
+  color: #dc3545;
+}
+
+/* Định dạng progress bar */
+.progress {
+  height: 0.6rem;
+}
+
+/* Định dạng khu vực thông tin chi tiết */
+.resource-detail-section {
+  margin-bottom: 2rem;
+}
+
+.resource-detail-section h5 {
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Khung các thẻ điều khiển chính */
+.tab-content {
+  min-height: 400px;
+  background-color: var(--bs-body-bg);
+}
+
+/* Media query cho thiết bị di động */
+@media (max-width: 768px) {
+  .stat-value {
+    font-size: 1.2rem;
+  }
+  
+  h4 {
+    font-size: 1.3rem;
+  }
+  
+  .btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
 }

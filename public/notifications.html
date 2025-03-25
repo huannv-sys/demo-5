@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Thông báo - MikroTik Monitor</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .notification-panel {
+            position: relative;
+            min-height: 200px;
+        }
+        
+        .card-header .form-check {
+            display: inline-block;
+            margin-left: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">MikroTik Monitor</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html"><i class="bi bi-house"></i> Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="monitor.html"><i class="bi bi-display"></i> Giám sát</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="notifications.html"><i class="bi bi-bell"></i> Thông báo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html"><i class="bi bi-gear"></i> Cài đặt</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-4">
+        <h1 class="mb-4"><i class="bi bi-bell"></i> Quản lý Thông báo</h1>
+        
+        <!-- Alert Container -->
+        <div id="alerts-container"></div>
+        
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-sliders"></i> Cài đặt Thông báo</h5>
+                        <button id="toggle-notification" class="btn btn-success">
+                            <i class="bi bi-toggle-on"></i> Đang bật
+                        </button>
+                    </div>
+                    <div class="card-body notification-panel" id="notification-config">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5><i class="bi bi-envelope"></i> Thông báo Email</h5>
+                                        <button id="toggle-email" class="btn btn-success btn-sm">
+                                            <i class="bi bi-toggle-on"></i> Đang bật
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="add-email-form" class="mb-3">
+                                            <div class="input-group">
+                                                <input type="email" id="new-email" class="form-control" placeholder="Nhập địa chỉ email">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-plus-circle"></i> Thêm
+                                                </button>
+                                            </div>
+                                        </form>
+                                        <div id="email-list">
+                                            <div class="alert alert-info">Đang tải danh sách email...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="bi bi-envelope-paper"></i> Kiểm tra Email</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="input-group mb-3">
+                                            <input type="email" id="test-email" class="form-control" placeholder="Nhập email để gửi thử">
+                                            <button id="test-email-btn" class="btn btn-primary">
+                                                <i class="bi bi-send"></i> Gửi thử
+                                            </button>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            Gửi email thử nghiệm để kiểm tra cấu hình đã hoạt động chưa.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5><i class="bi bi-chat"></i> Thông báo SMS</h5>
+                                        <button id="toggle-sms" class="btn btn-success btn-sm">
+                                            <i class="bi bi-toggle-on"></i> Đang bật
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="add-phone-form" class="mb-3">
+                                            <div class="input-group">
+                                                <input type="tel" id="new-phone" class="form-control" placeholder="Nhập số điện thoại (Định dạng: +84...)">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-plus-circle"></i> Thêm
+                                                </button>
+                                            </div>
+                                        </form>
+                                        <div id="phone-list">
+                                            <div class="alert alert-info">Đang tải danh sách số điện thoại...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="bi bi-chat-text"></i> Kiểm tra SMS</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="input-group mb-3">
+                                            <input type="tel" id="test-phone" class="form-control" placeholder="Nhập số điện thoại để gửi thử">
+                                            <button id="test-sms-btn" class="btn btn-primary">
+                                                <i class="bi bi-send"></i> Gửi thử
+                                            </button>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            Gửi SMS thử nghiệm để kiểm tra cấu hình đã hoạt động chưa.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Loại Cảnh báo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Loại cảnh báo</th>
+                                        <th>Mô tả</th>
+                                        <th>Kênh</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Mất kết nối</strong></td>
+                                        <td>Cảnh báo khi mất kết nối đến thiết bị</td>
+                                        <td>Email, SMS</td>
+                                        <td><span class="badge bg-success">Đang bật</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>CPU cao</strong></td>
+                                        <td>Cảnh báo khi CPU vượt quá 80%</td>
+                                        <td>Email</td>
+                                        <td><span class="badge bg-success">Đang bật</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Bộ nhớ cao</strong></td>
+                                        <td>Cảnh báo khi bộ nhớ vượt quá 80%</td>
+                                        <td>Email</td>
+                                        <td><span class="badge bg-success">Đang bật</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Interface ngừng hoạt động</strong></td>
+                                        <td>Cảnh báo khi interface ngừng hoạt động</td>
+                                        <td>Email, SMS</td>
+                                        <td><span class="badge bg-success">Đang bật</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i> Các loại cảnh báo có thể được cấu hình trong file <code>config/notification_config.json</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2025 MikroTik Monitor. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Phát triển bởi Ictech</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="js/notifications.js"></script>
+</body>
+</html>

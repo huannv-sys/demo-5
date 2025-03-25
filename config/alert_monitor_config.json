@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "check_interval": 60,
+  "connection_timeout": 10,
+  "alert_cooldown": 1800,
+  "alerts": {
+    "connection_lost": {
+      "enabled": true,
+      "retries": 3,
+      "cooldown": 1800
+    },
+    "high_cpu": {
+      "enabled": true,
+      "threshold": 80,
+      "duration": 300,
+      "cooldown": 3600
+    },
+    "high_memory": {
+      "enabled": true,
+      "threshold": 80,
+      "duration": 300,
+      "cooldown": 3600
+    },
+    "interface_down": {
+      "enabled": true,
+      "excluded_interfaces": ["lo"],
+      "cooldown": 1800
+    }
+  }
+}

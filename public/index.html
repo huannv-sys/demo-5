@@ -1,101 +1,394 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MikroTik Controller</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <title>MikroTik Controller - Hệ thống giám sát thiết bị MikroTik</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="bg-dark text-light">
-  <div class="container">
-    <header class="my-4 text-center">
-      <h1>MikroTik Controller</h1>
-      <p class="lead">Hệ thống giám sát và quản lý thiết bị MikroTik</p>
-    </header>
+<body data-bs-theme="dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/">
+        <i class="fas fa-network-wired me-2"></i>MikroTik Controller
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="btn-refresh">
+              <i class="fas fa-sync-alt me-1"></i> Làm mới
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#about-modal" data-bs-toggle="modal">
+              <i class="fas fa-info-circle me-1"></i> Thông tin
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-    <div class="row my-4">
-      <div class="col">
-        <div class="card bg-dark border-primary">
-          <div class="card-header bg-primary text-white">
-            <h2 class="h5 mb-0">Thêm thiết bị MikroTik</h2>
-          </div>
-          <div class="card-body">
-            <form id="router-form">
-              <div class="mb-3">
-                <label for="name" class="form-label">Tên thiết bị</label>
-                <input type="text" class="form-control" id="name" required>
-              </div>
-              <div class="mb-3">
-                <label for="address" class="form-label">Địa chỉ IP</label>
-                <input type="text" class="form-control" id="address" required placeholder="192.168.1.1">
-              </div>
-              <div class="mb-3">
-                <label for="port" class="form-label">Cổng API</label>
-                <input type="number" class="form-control" id="port" value="8728">
-              </div>
-              <div class="mb-3">
-                <label for="username" class="form-label">Tên đăng nhập</label>
-                <input type="text" class="form-control" id="username" required placeholder="admin">
-              </div>
-              <div class="mb-3">
-                <label for="password" class="form-label">Mật khẩu</label>
-                <input type="password" class="form-control" id="password" required>
-              </div>
-              <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" id="isDefault">
-                <label class="form-check-label" for="isDefault">
-                  Đặt làm thiết bị mặc định
-                </label>
-              </div>
-              <button type="submit" class="btn btn-primary w-100">Thêm thiết bị</button>
-            </form>
-          </div>
+  <div class="container mt-4">
+    <div id="alert-container"></div>
+
+    <!-- Thẻ điều hướng -->
+    <ul class="nav nav-tabs" id="main-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab">
+          <i class="fas fa-server me-1"></i> Kết nối thiết bị
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+          <i class="fas fa-tachometer-alt me-1"></i> Bảng điều khiển
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="interfaces-tab" data-bs-toggle="tab" data-bs-target="#interfaces" type="button" role="tab">
+          <i class="fas fa-network-wired me-1"></i> Giao diện mạng
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+          <i class="fas fa-bell me-1"></i> Thông báo
+        </button>
+      </li>
+    </ul>
+
+    <!-- Nội dung thẻ -->
+    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="tabContent">
+      
+      <!-- Tab kết nối thiết bị -->
+      <div class="tab-pane fade show active" id="connections" role="tabpanel">
+        <div class="d-flex justify-content-between mb-3">
+          <h4 class="mb-0">Danh sách thiết bị</h4>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#router-modal">
+            <i class="fas fa-plus me-1"></i> Thêm thiết bị
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover" id="connections-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Địa chỉ</th>
+                <th>Cổng</th>
+                <th>Người dùng</th>
+                <th>Mặc định</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div class="col">
-        <div class="card bg-dark border-info">
-          <div class="card-header bg-info text-dark">
-            <h2 class="h5 mb-0">Thông tin API</h2>
+      <!-- Tab bảng điều khiển -->
+      <div class="tab-pane fade" id="dashboard" role="tabpanel">
+        <div class="row mb-3 mt-2">
+          <div class="col-md-6">
+            <h4 id="resource-header">Thông tin tài nguyên</h4>
+            <p id="resource-subtitle" class="text-muted">Thông tin thiết bị MikroTik</p>
           </div>
-          <div class="card-body">
-            <div id="api-status">Đang kiểm tra kết nối...</div>
-            <hr>
-            <div id="connection-list">
-              <h3 class="h6">Các thiết bị đã thêm</h3>
-              <div class="list-group list-group-flush bg-dark" id="connections"></div>
+          <div class="col-md-6 text-end">
+            <div class="btn-group">
+              <button id="btn-connect" class="btn btn-success btn-sm">
+                <i class="fas fa-plug me-1"></i> Kết nối
+              </button>
+              <button id="btn-disconnect" class="btn btn-danger btn-sm" disabled>
+                <i class="fas fa-power-off me-1"></i> Ngắt kết nối
+              </button>
             </div>
-            <hr>
-            <button id="test-api" class="btn btn-info w-100 mb-2">Kiểm tra API</button>
-            <div id="api-result" class="mt-3"></div>
+          </div>
+        </div>
+
+        <div class="row" id="resource-cards">
+          <!-- Thẻ thông tin sẽ được tạo bằng JavaScript -->
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">
+                  <i class="fas fa-info-circle text-primary me-2"></i> Trạng thái
+                </h5>
+                <p class="card-text fs-4 text-center" id="connection-status">
+                  <span class="badge bg-secondary">Chưa kết nối</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="resource-details" class="mt-4">
+          <!-- Thông tin chi tiết sẽ được hiển thị khi kết nối -->
+        </div>
+      </div>
+
+      <!-- Tab giao diện mạng -->
+      <div class="tab-pane fade" id="interfaces" role="tabpanel">
+        <h4 class="mb-3">Danh sách giao diện mạng</h4>
+        <div class="table-responsive">
+          <table class="table table-hover" id="interfaces-table">
+            <thead>
+              <tr>
+                <th>Tên</th>
+                <th>Loại</th>
+                <th>MTU</th>
+                <th>Actual MTU</th>
+                <th>MAC Address</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab thông báo -->
+      <div class="tab-pane fade" id="notifications" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-12 mb-4">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-bell me-1"></i> Cài đặt Thông báo</h5>
+                <button id="toggle-notification" class="btn btn-success btn-sm">
+                  <i class="fas fa-toggle-on me-1"></i> Đang bật
+                </button>
+              </div>
+              <div class="card-body position-relative" id="notification-config">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="card mb-3">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-envelope me-1"></i> Thông báo Email</h5>
+                        <button id="toggle-email" class="btn btn-success btn-sm">
+                          <i class="fas fa-toggle-on me-1"></i> Đang bật
+                        </button>
+                      </div>
+                      <div class="card-body">
+                        <form id="add-email-form" class="mb-3">
+                          <div class="input-group">
+                            <input type="email" id="new-email" class="form-control" placeholder="Nhập địa chỉ email">
+                            <button type="submit" class="btn btn-primary">
+                              <i class="fas fa-plus me-1"></i> Thêm
+                            </button>
+                          </div>
+                        </form>
+                        <div id="email-list" class="mb-3">
+                          <div class="alert alert-info">Đang tải danh sách email...</div>
+                        </div>
+                        <div class="input-group mb-3">
+                          <input type="email" id="test-email" class="form-control" placeholder="Nhập email để gửi thử">
+                          <button id="test-email-btn" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Gửi thử
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="card mb-3">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-sms me-1"></i> Thông báo SMS</h5>
+                        <button id="toggle-sms" class="btn btn-success btn-sm">
+                          <i class="fas fa-toggle-on me-1"></i> Đang bật
+                        </button>
+                      </div>
+                      <div class="card-body">
+                        <form id="add-phone-form" class="mb-3">
+                          <div class="input-group">
+                            <input type="tel" id="new-phone" class="form-control" placeholder="Nhập số điện thoại (Định dạng: +84...)">
+                            <button type="submit" class="btn btn-primary">
+                              <i class="fas fa-plus me-1"></i> Thêm
+                            </button>
+                          </div>
+                        </form>
+                        <div id="phone-list" class="mb-3">
+                          <div class="alert alert-info">Đang tải danh sách số điện thoại...</div>
+                        </div>
+                        <div class="input-group mb-3">
+                          <input type="tel" id="test-phone" class="form-control" placeholder="Nhập số điện thoại để gửi thử">
+                          <button id="test-sms-btn" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Gửi thử
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle me-1"></i> Loại Cảnh báo</h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Loại cảnh báo</th>
+                                <th>Mô tả</th>
+                                <th>Kênh</th>
+                                <th>Trạng thái</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td><strong>Mất kết nối</strong></td>
+                                <td>Cảnh báo khi mất kết nối đến thiết bị</td>
+                                <td>Email, SMS</td>
+                                <td><span class="badge bg-success">Đang bật</span></td>
+                              </tr>
+                              <tr>
+                                <td><strong>CPU cao</strong></td>
+                                <td>Cảnh báo khi CPU vượt quá 80%</td>
+                                <td>Email</td>
+                                <td><span class="badge bg-success">Đang bật</span></td>
+                              </tr>
+                              <tr>
+                                <td><strong>Bộ nhớ cao</strong></td>
+                                <td>Cảnh báo khi bộ nhớ vượt quá 80%</td>
+                                <td>Email</td>
+                                <td><span class="badge bg-success">Đang bật</span></td>
+                              </tr>
+                              <tr>
+                                <td><strong>Interface ngừng hoạt động</strong></td>
+                                <td>Cảnh báo khi interface ngừng hoạt động</td>
+                                <td>Email, SMS</td>
+                                <td><span class="badge bg-success">Đang bật</span></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                          <i class="fas fa-info-circle me-1"></i> Ngưỡng cảnh báo có thể được cấu hình trong file <code>config/alert_monitor_config.json</code>.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="result-area" class="my-4">
-      <div class="card bg-dark border-success">
-        <div class="card-header bg-success text-white">
-          <h2 class="h5 mb-0">Kết quả</h2>
-        </div>
-        <div class="card-body">
-          <div id="result" class="bg-dark p-3 rounded border border-secondary overflow-auto" style="max-height: 300px">
-            <div class="text-muted">Kết quả sẽ hiển thị ở đây...</div>
-          </div>
-        </div>
+    <!-- Khung kết quả và nhật ký -->
+    <div class="card mt-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-terminal me-2"></i>Nhật ký hệ thống</span>
+        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-logs">
+          <i class="fas fa-trash-alt me-1"></i> Xóa
+        </button>
+      </div>
+      <div class="card-body">
+        <pre id="result" class="result-area"></pre>
       </div>
     </div>
-
-    <footer class="mt-5 mb-3 text-center text-muted">
-      <p>MikroTik Controller &copy; 2025</p>
-    </footer>
   </div>
 
-  <!-- Alert container -->
-  <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050"></div>
+  <!-- Modal Router -->
+  <div class="modal fade" id="router-modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm thiết bị MikroTik</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="router-form">
+            <div class="mb-3">
+              <label for="router-name" class="form-label">Tên thiết bị</label>
+              <input type="text" class="form-control" id="router-name" required>
+            </div>
+            <div class="mb-3">
+              <label for="router-address" class="form-label">Địa chỉ IP</label>
+              <input type="text" class="form-control" id="router-address" required>
+            </div>
+            <div class="mb-3">
+              <label for="router-port" class="form-label">Cổng API</label>
+              <input type="number" class="form-control" id="router-port" value="8728" required>
+            </div>
+            <div class="mb-3">
+              <label for="router-username" class="form-label">Tên đăng nhập</label>
+              <input type="text" class="form-control" id="router-username" required>
+            </div>
+            <div class="mb-3">
+              <label for="router-password" class="form-label">Mật khẩu</label>
+              <input type="password" class="form-control" id="router-password" required>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="router-default">
+              <label class="form-check-label" for="router-default">Đặt làm thiết bị mặc định</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Hủy
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-save-router">
+            <i class="fas fa-save me-1"></i> Lưu
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="main.js"></script>
+  <!-- Modal About -->
+  <div class="modal fade" id="about-modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thông tin về MikroTik Controller</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h5>MikroTik Controller</h5>
+          <p>Phiên bản: 1.0.0</p>
+          <p>MikroTik Controller là ứng dụng giám sát và quản lý các thiết bị MikroTik. Ứng dụng cho phép bạn kết nối đến API RouterOS và hiển thị thông tin chi tiết về thiết bị.</p>
+          
+          <h5 class="mt-3">Tính năng chính:</h5>
+          <ul>
+            <li>Kết nối đến API RouterOS</li>
+            <li>Giám sát tài nguyên hệ thống (CPU, RAM, HDD)</li>
+            <li>Giám sát và quản lý interfaces</li>
+            <li>Hiển thị thông tin thiết bị và trạng thái</li>
+            <li>Hỗ trợ nhiều thiết bị MikroTik</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-4 py-3 bg-dark text-center text-light">
+    <div class="container">
+      <p class="mb-0">MikroTik Controller &copy; 2024</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/main.js"></script>
+  <script src="/js/notifications.js"></script>
 </body>
 </html>

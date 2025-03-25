@@ -1,0 +1,51 @@
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ sudo journalctl -u mikrotik-controller | tail -n 50
+Mar 26 00:13:57 huannv npm[418816]:     at Module._compile (node:internal/modules/cjs/loader:1529:14) {
+Mar 26 00:13:57 huannv npm[418816]:   errno: -2,
+Mar 26 00:13:57 huannv npm[418816]:   code: 'ENOENT',
+Mar 26 00:13:57 huannv npm[418816]:   syscall: 'uv_cwd'
+Mar 26 00:13:57 huannv npm[418816]: }
+Mar 26 00:13:57 huannv npm[418816]: Node.js v20.19.0
+Mar 26 00:13:57 huannv systemd[1]: mikrotik-controller.service: Main process exited, code=exited, status=1/FAILURE
+Mar 26 00:13:57 huannv systemd[1]: mikrotik-controller.service: Failed with result 'exit-code'.
+Mar 26 00:13:57 huannv systemd[1]: mikrotik-controller.service: Scheduled restart job, restart counter is at 80.
+Mar 26 00:13:57 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:13:57 huannv npm[418829]: > rest-express@1.0.0 dev
+Mar 26 00:13:57 huannv npm[418829]: > tsx server/index.ts
+Mar 26 00:13:59 huannv npm[418853]: API Mode: REAL MikroTik API
+Mar 26 00:13:59 huannv npm[418853]: /home/huannv/GitDemoConnect/server/vite.ts:77
+Mar 26 00:13:59 huannv npm[418853]:     throw new Error(
+Mar 26 00:13:59 huannv npm[418853]:           ^
+Mar 26 00:13:59 huannv npm[418853]: Error: Could not find the build directory: /home/huannv/GitDemoConnect/server/public, make sure to build the client first
+Mar 26 00:13:59 huannv npm[418853]:     at serveStatic (/home/huannv/GitDemoConnect/server/vite.ts:77:11)
+Mar 26 00:13:59 huannv npm[418853]:     at <anonymous> (/home/huannv/GitDemoConnect/server/index.ts:61:5)
+Mar 26 00:13:59 huannv npm[418853]: Node.js v20.19.0
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Main process exited, code=exited, status=1/FAILURE
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Failed with result 'exit-code'.
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Consumed 4.530s CPU time.
+Mar 26 00:14:00 huannv systemd[1]: mikrotik-controller.service: Scheduled restart job, restart counter is at 81.
+Mar 26 00:14:00 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:00 huannv npm[418895]: > rest-express@1.0.0 dev
+Mar 26 00:14:00 huannv npm[418895]: > vite --port 3000
+Mar 26 00:14:00 huannv npm[418907]:   VITE v5.4.14  ready in 483 ms
+Mar 26 00:14:00 huannv npm[418907]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:14:00 huannv npm[418907]:   ➜  Network: use --host to expose
+Mar 26 00:14:40 huannv systemd[1]: Stopping mikrotik-controller.service - MikroTik Controller Monitoring System...
+Mar 26 00:14:40 huannv systemd[1]: mikrotik-controller.service: Deactivated successfully.
+Mar 26 00:14:40 huannv systemd[1]: Stopped mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:40 huannv systemd[1]: mikrotik-controller.service: Consumed 4.936s CPU time, 408.9M memory peak, 0B memory swap peak.
+Mar 26 00:14:40 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:40 huannv npm[419392]: > rest-express@1.0.0 dev
+Mar 26 00:14:40 huannv npm[419392]: > vite --port 3000
+Mar 26 00:14:41 huannv npm[419404]:   VITE v5.4.14  ready in 534 ms
+Mar 26 00:14:41 huannv npm[419404]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:14:41 huannv npm[419404]:   ➜  Network: use --host to expose
+Mar 26 00:28:09 huannv systemd[1]: Stopping mikrotik-controller.service - MikroTik Controller Monitoring System...
+Mar 26 00:28:09 huannv systemd[1]: mikrotik-controller.service: Deactivated successfully.
+Mar 26 00:28:09 huannv systemd[1]: Stopped mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:28:09 huannv systemd[1]: mikrotik-controller.service: Consumed 5.586s CPU time, 357.4M memory peak, 0B memory swap peak.
+Mar 26 00:28:09 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:28:10 huannv npm[420342]: > rest-express@1.0.0 dev
+Mar 26 00:28:10 huannv npm[420342]: > vite --port 3000
+Mar 26 00:28:10 huannv npm[420366]:   VITE v5.4.14  ready in 466 ms
+Mar 26 00:28:10 huannv npm[420366]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:28:10 huannv npm[420366]:   ➜  Network: use --host to expose

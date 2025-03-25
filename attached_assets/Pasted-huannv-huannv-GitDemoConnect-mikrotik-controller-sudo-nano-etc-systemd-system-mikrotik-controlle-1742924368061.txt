@@ -1,0 +1,88 @@
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ sudo nano /etc/systemd/system/mikrotik-controller.service
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ cat package.json | grep -A 5 scripts
+  "scripts": {
+    "dev": "vite --port 3000",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "tsc",
+    "db:push": "drizzle-kit push"
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ cat server/index.ts | grep -A 10 app.use
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+--
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    res.status(status).json({ message });
+    throw err;
+  });
+
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ sudo nano /etc/systemd/system/mikrotik-controller.service
+huannv@huannv:~/GitDemoConnect/mikrotik-controller$ journalctl -u mikrotik-controller -n 50
+Mar 26 00:13:57 huannv npm[418829]: > tsx server/index.ts
+Mar 26 00:13:59 huannv npm[418853]: API Mode: REAL MikroTik API
+Mar 26 00:13:59 huannv npm[418853]: /home/huannv/GitDemoConnect/server/vite.ts:77
+Mar 26 00:13:59 huannv npm[418853]:     throw new Error(
+Mar 26 00:13:59 huannv npm[418853]:           ^
+Mar 26 00:13:59 huannv npm[418853]: Error: Could not find the build directory: /home/huannv/GitDemoConnect/server/public, make sure to b>
+Mar 26 00:13:59 huannv npm[418853]:     at serveStatic (/home/huannv/GitDemoConnect/server/vite.ts:77:11)
+Mar 26 00:13:59 huannv npm[418853]:     at <anonymous> (/home/huannv/GitDemoConnect/server/index.ts:61:5)
+Mar 26 00:13:59 huannv npm[418853]: Node.js v20.19.0
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Main process exited, code=exited, status=1/FAILURE
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Failed with result 'exit-code'.
+Mar 26 00:13:59 huannv systemd[1]: mikrotik-controller.service: Consumed 4.530s CPU time.
+Mar 26 00:14:00 huannv systemd[1]: mikrotik-controller.service: Scheduled restart job, restart counter is at 81.
+Mar 26 00:14:00 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:00 huannv npm[418895]: > rest-express@1.0.0 dev
+Mar 26 00:14:00 huannv npm[418895]: > vite --port 3000
+Mar 26 00:14:00 huannv npm[418907]:   VITE v5.4.14  ready in 483 ms
+Mar 26 00:14:00 huannv npm[418907]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:14:00 huannv npm[418907]:   ➜  Network: use --host to expose
+Mar 26 00:14:40 huannv systemd[1]: Stopping mikrotik-controller.service - MikroTik Controller Monitoring System...
+Mar 26 00:14:40 huannv systemd[1]: mikrotik-controller.service: Deactivated successfully.
+Mar 26 00:14:40 huannv systemd[1]: Stopped mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:40 huannv systemd[1]: mikrotik-controller.service: Consumed 4.936s CPU time, 408.9M memory peak, 0B memory swap peak.
+Mar 26 00:14:40 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:14:40 huannv npm[419392]: > rest-express@1.0.0 dev
+Mar 26 00:14:40 huannv npm[419392]: > vite --port 3000
+Mar 26 00:14:41 huannv npm[419404]:   VITE v5.4.14  ready in 534 ms
+Mar 26 00:14:41 huannv npm[419404]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:14:41 huannv npm[419404]:   ➜  Network: use --host to expose
+Mar 26 00:28:09 huannv systemd[1]: Stopping mikrotik-controller.service - MikroTik Controller Monitoring System...
+Mar 26 00:28:09 huannv systemd[1]: mikrotik-controller.service: Deactivated successfully.
+Mar 26 00:28:09 huannv systemd[1]: Stopped mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:28:09 huannv systemd[1]: mikrotik-controller.service: Consumed 5.586s CPU time, 357.4M memory peak, 0B memory swap peak.
+Mar 26 00:28:09 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:28:10 huannv npm[420342]: > rest-express@1.0.0 dev
+Mar 26 00:28:10 huannv npm[420342]: > vite --port 3000
+Mar 26 00:28:10 huannv npm[420366]:   VITE v5.4.14  ready in 466 ms
+Mar 26 00:28:10 huannv npm[420366]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:28:10 huannv npm[420366]:   ➜  Network: use --host to expose
+Mar 26 00:32:59 huannv systemd[1]: Stopping mikrotik-controller.service - MikroTik Controller Monitoring System...
+Mar 26 00:32:59 huannv systemd[1]: mikrotik-controller.service: Deactivated successfully.
+Mar 26 00:32:59 huannv systemd[1]: Stopped mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:32:59 huannv systemd[1]: mikrotik-controller.service: Consumed 5.143s CPU time, 360.1M memory peak, 0B memory swap peak.
+Mar 26 00:32:59 huannv systemd[1]: Started mikrotik-controller.service - MikroTik Controller Monitoring System.
+Mar 26 00:32:59 huannv npm[420811]: > rest-express@1.0.0 dev
+Mar 26 00:32:59 huannv npm[420811]: > vite --port 3000 --host 0.0.0.0
+Mar 26 00:33:00 huannv npm[420823]:   VITE v5.4.14  ready in 457 ms
+Mar 26 00:33:00 huannv npm[420823]:   ➜  Local:   http://localhost:3000/
+Mar 26 00:33:00 huannv npm[420823]:   ➜  Network: http://192.168.1.165:3000/
+Mar 26 00:33:00 huannv npm[420823]:   ➜  Network: http://10.147.18.5:3000/
+lines 2-50/50 (END)

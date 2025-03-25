@@ -1,50 +1,43 @@
-# Hệ thống giám sát MikroTik Controller
+# MikroTik Controller - Hệ thống giám sát Router MikroTik
 
-Đây là hệ thống giám sát dành cho các thiết bị MikroTik RouterOS, cho phép bạn kết nối, giám sát và quản lý nhiều thiết bị MikroTik từ một giao diện quản lý thống nhất.
+Hệ thống giám sát và quản lý thiết bị MikroTik được phát triển trên máy chủ Ubuntu, cung cấp các công cụ quản lý và theo dõi hiệu quả với khả năng mở rộng và xử lý lỗi.
 
 ## Tính năng chính
 
-- Giám sát tài nguyên hệ thống (CPU, RAM, bộ nhớ)
-- Theo dõi các giao diện mạng và băng thông
-- Giám sát mạng không dây và các thiết bị kết nối
-- Quản lý các quy tắc tường lửa
-- Xem logs hệ thống
-- Quản lý nhiều thiết bị MikroTik
-- Giao diện người dùng hiện đại, dễ sử dụng
+- **Giám sát trực tiếp**: Kết nối trực tiếp đến API của RouterOS
+- **Quản lý nhiều thiết bị**: Thêm, sửa và xóa nhiều thiết bị MikroTik
+- **Dashboard trực quan**: Xem thông tin tổng quan hệ thống
+- **Giám sát tài nguyên**: CPU, RAM, dung lượng đĩa và thời gian hoạt động
+- **Quản lý interface**: Xem và quản lý tất cả giao diện mạng
+- **Mạng không dây**: Giám sát mạng WiFi và các client kết nối
+- **Firewall**: Quản lý các quy tắc tường lửa
+- **Logs**: Xem nhật ký hệ thống
 
-## Yêu cầu hệ thống
+## Cài đặt
 
-- Ubuntu 24.04 LTS
-- Node.js 20.x
-- PostgreSQL 16.x
+### Yêu cầu hệ thống
 
-## Cài đặt tự động
+- Ubuntu 24.04 (hoặc cao hơn)
+- Node.js 20+
+- PostgreSQL
 
-Cách đơn giản nhất để cài đặt hệ thống là sử dụng script cài đặt tự động.
+### Cài đặt tự động
 
-1. Tải script cài đặt:
-   ```bash
-   wget https://raw.githubusercontent.com/huannv-sys/demo2.0/main/install.sh
-   ```
+Cách đơn giản nhất để cài đặt là sử dụng script cài đặt tự động:
 
-2. Cấp quyền thực thi cho script:
-   ```bash
-   chmod +x install.sh
-   ```
-
-3. Chạy script với quyền root:
-   ```bash
-   sudo ./install.sh
-   ```
+```bash
+wget -O install.sh https://raw.githubusercontent.com/huannv-sys/demo2.0/main/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
 
 Script sẽ tự động:
-- Cài đặt Node.js, PostgreSQL và các phụ thuộc cần thiết
-- Tạo cơ sở dữ liệu và người dùng PostgreSQL
-- Tải mã nguồn từ GitHub
-- Cấu hình và khởi động dịch vụ
-- Thiết lập các lệnh hữu ích để quản lý hệ thống
+1. Cài đặt các phụ thuộc cần thiết
+2. Cấu hình PostgreSQL
+3. Tải mã nguồn từ GitHub
+4. Cấu hình và khởi động dịch vụ
 
-## Thêm thiết bị MikroTik
+### Thêm thiết bị MikroTik
 
 Sau khi cài đặt, bạn có thể thêm thiết bị MikroTik bằng lệnh:
 
@@ -52,130 +45,36 @@ Sau khi cài đặt, bạn có thể thêm thiết bị MikroTik bằng lệnh:
 add-mikrotik
 ```
 
-Hoặc chỉ định địa chỉ và cổng của server:
+hoặc với tham số:
 
 ```bash
-add-mikrotik 192.168.1.100 3000
+add-mikrotik <địa_chỉ_máy_chủ> <cổng>
 ```
 
-Script sẽ hướng dẫn bạn nhập thông tin thiết bị MikroTik cần giám sát:
-- Tên thiết bị
-- Địa chỉ IP
-- Cổng API (mặc định 8728)
-- Tên đăng nhập
-- Mật khẩu
-- Có đặt làm thiết bị mặc định không
+### Khởi động lại dịch vụ
 
-## Truy cập hệ thống
-
-Sau khi cài đặt, bạn có thể truy cập hệ thống qua trình duyệt web:
-
-```
-http://<địa_chỉ_IP_máy_chủ>:3000
-```
-
-## Quản lý dịch vụ
-
-Bạn có thể quản lý dịch vụ MikroTik Controller bằng các lệnh:
-
-```bash
-# Khởi động lại dịch vụ một cách nhanh chóng
-restart-mikrotik-controller
-
-# Hoặc sử dụng các lệnh systemd tiêu chuẩn:
-sudo systemctl status mikrotik-controller
-sudo systemctl start mikrotik-controller
-sudo systemctl stop mikrotik-controller
-sudo systemctl restart mikrotik-controller
-```
-
-## Xem logs
-
-Để xem logs của hệ thống trong thời gian thực:
-
-```bash
-sudo journalctl -u mikrotik-controller -f
-```
-
-Hoặc xem logs gần đây:
-
-```bash
-sudo journalctl -u mikrotik-controller -n 100
-```
-
-## Xử lý sự cố
-
-Nếu bạn gặp vấn đề khi cài đặt hoặc sử dụng hệ thống, vui lòng thực hiện các bước sau:
-
-### 1. Kiểm tra trạng thái dịch vụ
-
-```bash
-sudo systemctl status mikrotik-controller
-```
-
-### 2. Kiểm tra logs
-
-```bash
-sudo journalctl -u mikrotik-controller -n 100
-```
-
-### 3. Kiểm tra kết nối đến cơ sở dữ liệu
-
-```bash
-sudo -u postgres psql -c "\l" | grep mikrotik
-```
-
-### 4. Kiểm tra cổng đã được mở chưa
-
-```bash
-sudo ufw status | grep 3000
-```
-
-### 5. Khởi động lại dịch vụ
+Nếu cần khởi động lại dịch vụ:
 
 ```bash
 restart-mikrotik-controller
 ```
 
-### 6. Kiểm tra kết nối đến thiết bị MikroTik
+## Khắc phục sự cố
 
-Đảm bảo rằng:
-- API RouterOS đã được bật trên thiết bị MikroTik
-- Tên đăng nhập và mật khẩu chính xác
-- Không có tường lửa chặn kết nối
+### Kết nối đến thiết bị MikroTik
 
-## Thông tin bổ sung
+1. Đảm bảo API RouterOS đã được bật trên thiết bị MikroTik
+2. Kiểm tra cổng API (mặc định 8728)
+3. Kiểm tra quyền người dùng MikroTik có đủ để truy cập API
 
-- Dự án này dựa trên kho lưu trữ [demo2.0](https://github.com/huannv-sys/demo2.0)
-- Sử dụng [routeros-client](https://www.npmjs.com/package/routeros-client) để giao tiếp với thiết bị MikroTik
-- Giao diện xây dựng bằng React, Tailwind CSS và shadcn/ui
-- Backend sử dụng Express và Drizzle ORM
+### Lỗi dịch vụ
 
-## Tùy chỉnh
-
-### Thay đổi cổng mặc định
-
-Nếu muốn sử dụng cổng khác thay vì 3000, hãy chỉnh sửa file:
+Kiểm tra logs hệ thống:
 
 ```bash
-sudo nano /etc/systemd/system/mikrotik-controller.service
+journalctl -u mikrotik-controller -f
 ```
 
-Sau đó khởi động lại dịch vụ:
+## Thông tin thêm
 
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart mikrotik-controller
-```
-
-### Nâng cấp hệ thống
-
-Để nâng cấp khi có phiên bản mới:
-
-```bash
-cd /đường/dẫn/đến/mikrotik-controller
-git pull
-npm install
-npm run db:push
-sudo systemctl restart mikrotik-controller
-```
+- Source code: [https://github.com/huannv-sys/demo2.0](https://github.com/huannv-sys/demo2.0)

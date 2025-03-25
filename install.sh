@@ -132,10 +132,11 @@ mv ../.env .
 print_header "Cấu hình cổng ứng dụng"
 # Sử dụng jq nếu có sẵn, nếu không thì dùng sed
 if command -v jq &>/dev/null; then
-  jq '.scripts.dev = "vite --port '$APP_PORT'"' package.json > package.json.tmp && mv package.json.tmp package.json
+  jq '.scripts.dev = "tsx server/index.ts" | .scripts.frontend = "vite --port '$APP_PORT' --host 0.0.0.0"' package.json > package.json.tmp && mv package.json.tmp package.json
 else
   # Sử dụng sed nếu không có jq
-  sed -i 's/"dev": "vite"/"dev": "vite --port '$APP_PORT'"/g' package.json
+  sed -i 's/"dev": "vite"/"dev": "tsx server\/index.ts"/g' package.json
+  sed -i '/scripts/a \ \ \ \ "frontend": "vite --port '$APP_PORT' --host 0.0.0.0",' package.json
 fi
 print_success "Cổng ứng dụng đã được cấu hình: $APP_PORT"
 
@@ -152,6 +153,29 @@ print_header "Cấu hình firewall"
 ufw allow $APP_PORT/tcp comment "MikroTik Controller" || print_warning "Không thể mở cổng $APP_PORT trong firewall"
 ufw status verbose
 
+# Tạo script khởi chạy để xây dựng và khởi động ứng dụng
+print_header "Tạo script khởi chạy"
+cat > /usr/local/bin/run-mikrotik << EOL
+#!/bin/bash
+
+# Script để xây dựng và chạy MikroTik Controller
+# Phiên bản: 1.0
+WORKING_DIR="$(pwd)"
+
+# Xây dựng frontend
+cd "\$WORKING_DIR"
+echo "Đang xây dựng ứng dụng..."
+npm run build
+
+# Chạy backend với static files từ thư mục build
+echo "Khởi động ứng dụng..."
+NODE_ENV=production npm run start
+EOL
+
+chmod +x /usr/local/bin/run-mikrotik
+ln -sf /usr/local/bin/run-mikrotik /usr/bin/run-mikrotik
+print_success "Script khởi chạy đã được tạo: /usr/bin/run-mikrotik"
+
 # Tạo file systemd để chạy dịch vụ
 print_header "Cấu hình dịch vụ systemd"
 cat > /etc/systemd/system/mikrotik-controller.service << EOL
@@ -164,7 +188,7 @@ Requires=postgresql.service
 Type=simple
 User=root
 WorkingDirectory=$(pwd)
-ExecStart=/usr/bin/npm run dev
+ExecStart=/usr/bin/run-mikrotik
 Restart=on-failure
 RestartSec=10
 Environment=NODE_ENV=production

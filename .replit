@@ -1,0 +1,5 @@
+run = "npx tsx server/index.ts"
+watch = ["server", "shared"]
+channel = "stable"
+modules = ["nodejs-20"]
+

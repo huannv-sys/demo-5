@@ -1,0 +1,1 @@
+{"commands":[{"name":"server","cwd":"/","command":"USE_REAL_MIKROTIK_API=true npx tsx server/index.ts","previews":[{"outputType":"webview","preferredPort":5000,"id":"webview1"}]}]}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MikroTik Controller
 
 Hệ thống giám sát và quản lý thiết bị MikroTik, cung cấp các công cụ quản lý hiệu quả với khả năng mở rộng. Dự án này được thiết kế để chạy trên máy chủ Ubuntu, cung cấp giao diện web và các công cụ dòng lệnh để giám sát nhiều thiết bị MikroTik cùng lúc.
@@ -114,3 +115,6 @@ Vui lòng tạo issue hoặc pull request trên GitHub repository.
 ## Giấy phép
 
 Dự án này được phân phối dưới giấy phép MIT.
+=======
+# demo3.0
+>>>>>>> 2858be71dec9dd6f7eac1b92f74c9f153f98b145

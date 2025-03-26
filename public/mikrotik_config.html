@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cấu hình Kết nối MikroTik</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .config-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        
+        .connection-list {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .connection-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .connection-info {
+            flex-grow: 1;
+        }
+        
+        .connection-actions {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cấu hình Kết nối MikroTik</h1>
+        
+        <div class="config-container">
+            <h2>Thêm kết nối mới</h2>
+            
+            <form id="mikrotikForm">
+                <div class="form-group">
+                    <label for="name">Tên kết nối:</label>
+                    <input type="text" id="name" name="name" placeholder="MikroTik Router" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Địa chỉ IP:</label>
+                    <input type="text" id="address" name="address" placeholder="192.168.1.1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="port">Port API:</label>
+                    <input type="number" id="port" name="port" placeholder="8728" value="8728" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập:</label>
+                    <input type="text" id="username" name="username" placeholder="admin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Mật khẩu:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isDefault" name="isDefault" checked>
+                        Đặt làm kết nối mặc định
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn">Lưu kết nối</button>
+                    <button type="button" id="testConnection" class="btn btn-secondary">Kiểm tra kết nối</button>
+                </div>
+            </form>
+            
+            <div id="status" class="status" style="display: none;"></div>
+        </div>
+        
+        <div class="connection-list">
+            <h2>Danh sách kết nối đã lưu</h2>
+            <div id="connectionList"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tải danh sách kết nối
+            loadConnections();
+            
+            // Xử lý form thêm kết nối
+            document.getElementById('mikrotikForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveConnection();
+            });
+            
+            // Xử lý nút kiểm tra kết nối
+            document.getElementById('testConnection').addEventListener('click', function() {
+                testConnection();
+            });
+        });
+        
+        // Tải danh sách kết nối
+        function loadConnections() {
+            fetch('/api/connections')
+                .then(response => response.json())
+                .then(data => {
+                    const connectionList = document.getElementById('connectionList');
+                    connectionList.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        connectionList.innerHTML = '<p>Chưa có kết nối nào được lưu.</p>';
+                        return;
+                    }
+                    
+                    data.forEach(connection => {
+                        const item = document.createElement('div');
+                        item.className = 'connection-item';
+                        
+                        const info = document.createElement('div');
+                        info.className = 'connection-info';
+                        info.innerHTML = `
+                            <strong>${connection.name}</strong><br>
+                            ${connection.address}:${connection.port} (${connection.username})
+                            ${connection.isDefault ? ' <span class="badge">Mặc định</span>' : ''}
+                        `;
+                        
+                        const actions = document.createElement('div');
+                        actions.className = 'connection-actions';
+                        
+                        const connectBtn = document.createElement('button');
+                        connectBtn.className = 'btn';
+                        connectBtn.textContent = 'Kết nối';
+                        connectBtn.addEventListener('click', () => connectToRouter(connection.id));
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn btn-secondary';
+                        deleteBtn.textContent = 'Xóa';
+                        deleteBtn.addEventListener('click', () => deleteConnection(connection.id));
+                        
+                        actions.appendChild(connectBtn);
+                        actions.appendChild(deleteBtn);
+                        
+                        item.appendChild(info);
+                        item.appendChild(actions);
+                        connectionList.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading connections:', error);
+                    showStatus('Lỗi khi tải danh sách kết nối', false);
+                });
+        }
+        
+        // Lưu kết nối mới
+        function saveConnection() {
+            const formData = {
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                port: parseInt(document.getElementById('port').value),
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                isDefault: document.getElementById('isDefault').checked
+            };
+            
+            fetch('/api/connections', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus('Kết nối đã được lưu thành công!', true);
+                document.getElementById('mikrotikForm').reset();
+                loadConnections();
+            })
+            .catch(error => {
+                console.error('Error saving connection:', error);
+                showStatus(`Lỗi: ${error.message || 'Không thể lưu kết nối'}`, false);
+            });
+        }
+        
+        // Kiểm tra kết nối
+        function testConnection() {
+            const formData = {
+                address: document.getElementById('address').value,
+                port: parseInt(document.getElementById('port').value),
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            
+            // Validate input
+            if (!formData.address || !formData.username || !formData.password) {
+                showStatus('Vui lòng điền đầy đủ thông tin kết nối', false);
+                return;
+            }
+            
+            showStatus('Đang kiểm tra kết nối...', true, false);
+            
+            // Tạm thời sử dụng endpoint tạo kết nối để kiểm tra
+            fetch('/api/connections', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    name: 'Test Connection',
+                    isDefault: false
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus('Kết nối thành công!', true);
+            })
+            .catch(error => {
+                console.error('Connection test failed:', error);
+                showStatus(`Kiểm tra kết nối thất bại: ${error.message || 'Không thể kết nối đến router'}`, false);
+            });
+        }
+        
+        // Kết nối đến router
+        function connectToRouter(id) {
+            fetch(`/api/connections/${id}/connect`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus(`Đã kết nối thành công đến router ID: ${id}`, true);
+                // Chuyển hướng đến trang dashboard
+                window.location.href = '/';
+            })
+            .catch(error => {
+                console.error('Error connecting to router:', error);
+                showStatus(`Lỗi kết nối: ${error.message || 'Không thể kết nối đến router'}`, false);
+            });
+        }
+        
+        // Xóa kết nối
+        function deleteConnection(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa kết nối này?')) {
+                return;
+            }
+            
+            fetch(`/api/connections/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus('Đã xóa kết nối thành công', true);
+                loadConnections();
+            })
+            .catch(error => {
+                console.error('Error deleting connection:', error);
+                showStatus(`Lỗi: ${error.message || 'Không thể xóa kết nối'}`, false);
+            });
+        }
+        
+        // Hiển thị thông báo trạng thái
+        function showStatus(message, isSuccess, autoHide = true) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${isSuccess ? 'success' : 'error'}`;
+            statusEl.style.display = 'block';
+            
+            if (autoHide) {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,394 +1,615 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MikroTik Controller - Hệ thống giám sát thiết bị MikroTik</title>
-  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MikroTik Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #1976d2;
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 30px;
+            margin-right: 10px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            margin: 0;
+            color: #333;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-online {
+            background-color: #4CAF50;
+        }
+        
+        .status-offline {
+            background-color: #F44336;
+        }
+        
+        .status-warning {
+            background-color: #FFC107;
+        }
+        
+        .info-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        
+        .info-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar .progress {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+        
+        .usage-low {
+            background-color: #4CAF50;
+        }
+        
+        .usage-medium {
+            background-color: #FFC107;
+        }
+        
+        .usage-high {
+            background-color: #F44336;
+        }
+        
+        .connection-status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .connected {
+            color: #4CAF50;
+        }
+        
+        .disconnected {
+            color: #F44336;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .interface-up {
+            color: #4CAF50;
+        }
+        
+        .interface-down {
+            color: #F44336;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                flex-direction: column;
+            }
+            
+            nav ul li {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
-<body data-bs-theme="dark">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span>🔄 MikroTik Monitor</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/mikrotik_config.html">Cấu hình kết nối</a></li>
+                    <li><a href="http://localhost:5000" target="_blank">Streamlit UI</a></li>
+                    <li><a href="/notifications.html">Thông báo</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
     <div class="container">
-      <a class="navbar-brand fw-bold" href="/">
-        <i class="fas fa-network-wired me-2"></i>MikroTik Controller
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="btn-refresh">
-              <i class="fas fa-sync-alt me-1"></i> Làm mới
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#about-modal" data-bs-toggle="modal">
-              <i class="fas fa-info-circle me-1"></i> Thông tin
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
-    <div id="alert-container"></div>
-
-    <!-- Thẻ điều hướng -->
-    <ul class="nav nav-tabs" id="main-tabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab">
-          <i class="fas fa-server me-1"></i> Kết nối thiết bị
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
-          <i class="fas fa-tachometer-alt me-1"></i> Bảng điều khiển
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="interfaces-tab" data-bs-toggle="tab" data-bs-target="#interfaces" type="button" role="tab">
-          <i class="fas fa-network-wired me-1"></i> Giao diện mạng
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
-          <i class="fas fa-bell me-1"></i> Thông báo
-        </button>
-      </li>
-    </ul>
-
-    <!-- Nội dung thẻ -->
-    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="tabContent">
-      
-      <!-- Tab kết nối thiết bị -->
-      <div class="tab-pane fade show active" id="connections" role="tabpanel">
-        <div class="d-flex justify-content-between mb-3">
-          <h4 class="mb-0">Danh sách thiết bị</h4>
-          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#router-modal">
-            <i class="fas fa-plus me-1"></i> Thêm thiết bị
-          </button>
+        <div id="connectionStatus" class="connection-status">
+            <h2>Trạng thái kết nối</h2>
+            <p>Đang kiểm tra kết nối...</p>
         </div>
-
-        <div class="table-responsive">
-          <table class="table table-hover" id="connections-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tên</th>
-                <th>Địa chỉ</th>
-                <th>Cổng</th>
-                <th>Người dùng</th>
-                <th>Mặc định</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Tab bảng điều khiển -->
-      <div class="tab-pane fade" id="dashboard" role="tabpanel">
-        <div class="row mb-3 mt-2">
-          <div class="col-md-6">
-            <h4 id="resource-header">Thông tin tài nguyên</h4>
-            <p id="resource-subtitle" class="text-muted">Thông tin thiết bị MikroTik</p>
-          </div>
-          <div class="col-md-6 text-end">
-            <div class="btn-group">
-              <button id="btn-connect" class="btn btn-success btn-sm">
-                <i class="fas fa-plug me-1"></i> Kết nối
-              </button>
-              <button id="btn-disconnect" class="btn btn-danger btn-sm" disabled>
-                <i class="fas fa-power-off me-1"></i> Ngắt kết nối
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="row" id="resource-cards">
-          <!-- Thẻ thông tin sẽ được tạo bằng JavaScript -->
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <i class="fas fa-info-circle text-primary me-2"></i> Trạng thái
-                </h5>
-                <p class="card-text fs-4 text-center" id="connection-status">
-                  <span class="badge bg-secondary">Chưa kết nối</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="resource-details" class="mt-4">
-          <!-- Thông tin chi tiết sẽ được hiển thị khi kết nối -->
-        </div>
-      </div>
-
-      <!-- Tab giao diện mạng -->
-      <div class="tab-pane fade" id="interfaces" role="tabpanel">
-        <h4 class="mb-3">Danh sách giao diện mạng</h4>
-        <div class="table-responsive">
-          <table class="table table-hover" id="interfaces-table">
-            <thead>
-              <tr>
-                <th>Tên</th>
-                <th>Loại</th>
-                <th>MTU</th>
-                <th>Actual MTU</th>
-                <th>MAC Address</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Tab thông báo -->
-      <div class="tab-pane fade" id="notifications" role="tabpanel">
-        <div class="row">
-          <div class="col-lg-12 mb-4">
+        
+        <div id="dashboard" class="dashboard" style="display: none;">
             <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <h5><i class="fas fa-bell me-1"></i> Cài đặt Thông báo</h5>
-                <button id="toggle-notification" class="btn btn-success btn-sm">
-                  <i class="fas fa-toggle-on me-1"></i> Đang bật
-                </button>
-              </div>
-              <div class="card-body position-relative" id="notification-config">
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="card mb-3">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-envelope me-1"></i> Thông báo Email</h5>
-                        <button id="toggle-email" class="btn btn-success btn-sm">
-                          <i class="fas fa-toggle-on me-1"></i> Đang bật
-                        </button>
-                      </div>
-                      <div class="card-body">
-                        <form id="add-email-form" class="mb-3">
-                          <div class="input-group">
-                            <input type="email" id="new-email" class="form-control" placeholder="Nhập địa chỉ email">
-                            <button type="submit" class="btn btn-primary">
-                              <i class="fas fa-plus me-1"></i> Thêm
-                            </button>
-                          </div>
-                        </form>
-                        <div id="email-list" class="mb-3">
-                          <div class="alert alert-info">Đang tải danh sách email...</div>
-                        </div>
-                        <div class="input-group mb-3">
-                          <input type="email" id="test-email" class="form-control" placeholder="Nhập email để gửi thử">
-                          <button id="test-email-btn" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i> Gửi thử
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-md-6">
-                    <div class="card mb-3">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-sms me-1"></i> Thông báo SMS</h5>
-                        <button id="toggle-sms" class="btn btn-success btn-sm">
-                          <i class="fas fa-toggle-on me-1"></i> Đang bật
-                        </button>
-                      </div>
-                      <div class="card-body">
-                        <form id="add-phone-form" class="mb-3">
-                          <div class="input-group">
-                            <input type="tel" id="new-phone" class="form-control" placeholder="Nhập số điện thoại (Định dạng: +84...)">
-                            <button type="submit" class="btn btn-primary">
-                              <i class="fas fa-plus me-1"></i> Thêm
-                            </button>
-                          </div>
-                        </form>
-                        <div id="phone-list" class="mb-3">
-                          <div class="alert alert-info">Đang tải danh sách số điện thoại...</div>
-                        </div>
-                        <div class="input-group mb-3">
-                          <input type="tel" id="test-phone" class="form-control" placeholder="Nhập số điện thoại để gửi thử">
-                          <button id="test-sms-btn" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i> Gửi thử
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div class="card-header">
+                    <h2 class="card-title">Thông tin hệ thống</h2>
                 </div>
+                <ul class="info-list" id="systemInfo">
+                    <li><span class="info-label">Loading...</span></li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">CPU</h2>
+                </div>
+                <ul class="info-list">
+                    <li>
+                        <span class="info-label">CPU Load</span>
+                        <span class="info-value" id="cpuLoad">0%</span>
+                    </li>
+                </ul>
+                <div class="progress-bar">
+                    <div class="progress usage-low" id="cpuProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Memory</h2>
+                </div>
+                <ul class="info-list">
+                    <li>
+                        <span class="info-label">Memory Used</span>
+                        <span class="info-value" id="memoryUsed">0 MB / 0 MB</span>
+                    </li>
+                    <li>
+                        <span class="info-label">Memory Usage</span>
+                        <span class="info-value" id="memoryPercent">0%</span>
+                    </li>
+                </ul>
+                <div class="progress-bar">
+                    <div class="progress usage-low" id="memoryProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Storage</h2>
+                </div>
+                <ul class="info-list">
+                    <li>
+                        <span class="info-label">Storage Used</span>
+                        <span class="info-value" id="storageUsed">0 MB / 0 MB</span>
+                    </li>
+                    <li>
+                        <span class="info-label">Storage Usage</span>
+                        <span class="info-value" id="storagePercent">0%</span>
+                    </li>
+                </ul>
+                <div class="progress-bar">
+                    <div class="progress usage-low" id="storageProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="interfacesCard" style="display: none; margin-top: 20px;">
+            <div class="card-header">
+                <h2 class="card-title">Network Interfaces</h2>
+            </div>
+            <div class="table-responsive">
+                <table id="interfacesTable">
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>Type</th>
+                            <th>MAC Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interfacesBody">
+                        <tr>
+                            <td colspan="4">Loading interfaces...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConnectionStatus();
+            
+            // Kiểm tra trạng thái kết nối mỗi 30 giây
+            setInterval(checkConnectionStatus, 30000);
+        });
+        
+        // Kiểm tra trạng thái kết nối
+        function checkConnectionStatus() {
+            // Lấy router ID từ localStorage, mặc định là 1
+            const routerId = localStorage.getItem('selectedRouterId') || 1;
+            
+            fetch(`/api/connections/${routerId}/connect`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to connect');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateConnectionStatus(true);
+                loadResourceInfo(routerId);
+                loadInterfaces(routerId);
+            })
+            .catch(error => {
+                console.error('Error connecting to router:', error);
+                updateConnectionStatus(false);
+            });
+        }
+        
+        // Cập nhật hiển thị trạng thái kết nối
+        function updateConnectionStatus(isConnected) {
+            const statusElem = document.getElementById('connectionStatus');
+            
+            if (isConnected) {
+                statusElem.innerHTML = `
+                    <h2 class="connected">✅ Đã kết nối đến MikroTik Router</h2>
+                    <p>Kết nối hoạt động bình thường</p>
+                `;
+                document.getElementById('dashboard').style.display = 'grid';
+                document.getElementById('interfacesCard').style.display = 'block';
+            } else {
+                statusElem.innerHTML = `
+                    <h2 class="disconnected">❌ Không có kết nối đến MikroTik Router</h2>
+                    <p>Vui lòng kiểm tra cấu hình kết nối</p>
+                    <a href="/mikrotik_config.html" class="btn">Thiết lập kết nối</a>
+                `;
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('interfacesCard').style.display = 'none';
+            }
+        }
+        
+        // Tải thông tin tài nguyên
+        function loadResourceInfo(routerId) {
+            fetch(`/api/connections/${routerId}/resources`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to get resources');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateSystemInfo(data);
+                    updateResourceUsage(data);
+                })
+                .catch(error => {
+                    console.error('Error loading router resources:', error);
+                });
+        }
+        
+        // Cập nhật thông tin hệ thống
+        function updateSystemInfo(data) {
+            const systemInfoElem = document.getElementById('systemInfo');
+            
+            systemInfoElem.innerHTML = `
+                <li>
+                    <span class="info-label">Platform</span>
+                    <span class="info-value">${data.platform}</span>
+                </li>
+                <li>
+                    <span class="info-label">Board</span>
+                    <span class="info-value">${data.board}</span>
+                </li>
+                <li>
+                    <span class="info-label">Version</span>
+                    <span class="info-value">${data.version}</span>
+                </li>
+                <li>
+                    <span class="info-label">Uptime</span>
+                    <span class="info-value">${formatUptime(data.uptime)}</span>
+                </li>
+                <li>
+                    <span class="info-label">Architecture</span>
+                    <span class="info-value">${data.architecture}</span>
+                </li>
+            `;
+        }
+        
+        // Cập nhật hiển thị sử dụng tài nguyên
+        function updateResourceUsage(data) {
+            // CPU
+            const cpuLoad = parseInt(data.cpuLoad);
+            document.getElementById('cpuLoad').textContent = `${cpuLoad}%`;
+            const cpuProgress = document.getElementById('cpuProgress');
+            cpuProgress.style.width = `${cpuLoad}%`;
+            updateProgressColor(cpuProgress, cpuLoad);
+            
+            // Memory
+            const totalMemory = formatBytes(data.totalMemory);
+            const freeMemory = formatBytes(data.freeMemory);
+            const usedMemory = formatBytes(data.totalMemory - data.freeMemory);
+            const memoryPercent = Math.round((data.totalMemory - data.freeMemory) / data.totalMemory * 100);
+            
+            document.getElementById('memoryUsed').textContent = `${usedMemory} / ${totalMemory}`;
+            document.getElementById('memoryPercent').textContent = `${memoryPercent}%`;
+            const memoryProgress = document.getElementById('memoryProgress');
+            memoryProgress.style.width = `${memoryPercent}%`;
+            updateProgressColor(memoryProgress, memoryPercent);
+            
+            // Storage
+            if (data.totalHdd && data.freeHdd) {
+                const totalHdd = formatBytes(data.totalHdd);
+                const freeHdd = formatBytes(data.freeHdd);
+                const usedHdd = formatBytes(data.totalHdd - data.freeHdd);
+                const storagePercent = Math.round((data.totalHdd - data.freeHdd) / data.totalHdd * 100);
                 
-                <div class="row">
-                  <div class="col-12">
-                    <div class="card">
-                      <div class="card-header">
-                        <h5><i class="fas fa-exclamation-triangle me-1"></i> Loại Cảnh báo</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="table-responsive">
-                          <table class="table table-hover">
-                            <thead>
-                              <tr>
-                                <th>Loại cảnh báo</th>
-                                <th>Mô tả</th>
-                                <th>Kênh</th>
-                                <th>Trạng thái</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td><strong>Mất kết nối</strong></td>
-                                <td>Cảnh báo khi mất kết nối đến thiết bị</td>
-                                <td>Email, SMS</td>
-                                <td><span class="badge bg-success">Đang bật</span></td>
-                              </tr>
-                              <tr>
-                                <td><strong>CPU cao</strong></td>
-                                <td>Cảnh báo khi CPU vượt quá 80%</td>
-                                <td>Email</td>
-                                <td><span class="badge bg-success">Đang bật</span></td>
-                              </tr>
-                              <tr>
-                                <td><strong>Bộ nhớ cao</strong></td>
-                                <td>Cảnh báo khi bộ nhớ vượt quá 80%</td>
-                                <td>Email</td>
-                                <td><span class="badge bg-success">Đang bật</span></td>
-                              </tr>
-                              <tr>
-                                <td><strong>Interface ngừng hoạt động</strong></td>
-                                <td>Cảnh báo khi interface ngừng hoạt động</td>
-                                <td>Email, SMS</td>
-                                <td><span class="badge bg-success">Đang bật</span></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div class="alert alert-info mt-3">
-                          <i class="fas fa-info-circle me-1"></i> Ngưỡng cảnh báo có thể được cấu hình trong file <code>config/alert_monitor_config.json</code>.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Khung kết quả và nhật ký -->
-    <div class="card mt-4">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-terminal me-2"></i>Nhật ký hệ thống</span>
-        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-logs">
-          <i class="fas fa-trash-alt me-1"></i> Xóa
-        </button>
-      </div>
-      <div class="card-body">
-        <pre id="result" class="result-area"></pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Router -->
-  <div class="modal fade" id="router-modal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Thêm thiết bị MikroTik</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form id="router-form">
-            <div class="mb-3">
-              <label for="router-name" class="form-label">Tên thiết bị</label>
-              <input type="text" class="form-control" id="router-name" required>
-            </div>
-            <div class="mb-3">
-              <label for="router-address" class="form-label">Địa chỉ IP</label>
-              <input type="text" class="form-control" id="router-address" required>
-            </div>
-            <div class="mb-3">
-              <label for="router-port" class="form-label">Cổng API</label>
-              <input type="number" class="form-control" id="router-port" value="8728" required>
-            </div>
-            <div class="mb-3">
-              <label for="router-username" class="form-label">Tên đăng nhập</label>
-              <input type="text" class="form-control" id="router-username" required>
-            </div>
-            <div class="mb-3">
-              <label for="router-password" class="form-label">Mật khẩu</label>
-              <input type="password" class="form-control" id="router-password" required>
-            </div>
-            <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="router-default">
-              <label class="form-check-label" for="router-default">Đặt làm thiết bị mặc định</label>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            <i class="fas fa-times me-1"></i> Hủy
-          </button>
-          <button type="button" class="btn btn-primary" id="btn-save-router">
-            <i class="fas fa-save me-1"></i> Lưu
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal About -->
-  <div class="modal fade" id="about-modal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Thông tin về MikroTik Controller</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <h5>MikroTik Controller</h5>
-          <p>Phiên bản: 1.0.0</p>
-          <p>MikroTik Controller là ứng dụng giám sát và quản lý các thiết bị MikroTik. Ứng dụng cho phép bạn kết nối đến API RouterOS và hiển thị thông tin chi tiết về thiết bị.</p>
-          
-          <h5 class="mt-3">Tính năng chính:</h5>
-          <ul>
-            <li>Kết nối đến API RouterOS</li>
-            <li>Giám sát tài nguyên hệ thống (CPU, RAM, HDD)</li>
-            <li>Giám sát và quản lý interfaces</li>
-            <li>Hiển thị thông tin thiết bị và trạng thái</li>
-            <li>Hỗ trợ nhiều thiết bị MikroTik</li>
-          </ul>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="mt-4 py-3 bg-dark text-center text-light">
-    <div class="container">
-      <p class="mb-0">MikroTik Controller &copy; 2024</p>
-    </div>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/main.js"></script>
-  <script src="/js/notifications.js"></script>
+                document.getElementById('storageUsed').textContent = `${usedHdd} / ${totalHdd}`;
+                document.getElementById('storagePercent').textContent = `${storagePercent}%`;
+                const storageProgress = document.getElementById('storageProgress');
+                storageProgress.style.width = `${storagePercent}%`;
+                updateProgressColor(storageProgress, storagePercent);
+            }
+        }
+        
+        // Cập nhật màu thanh tiến trình theo mức sử dụng
+        function updateProgressColor(element, percent) {
+            element.className = 'progress';
+            
+            if (percent < 50) {
+                element.classList.add('usage-low');
+            } else if (percent < 80) {
+                element.classList.add('usage-medium');
+            } else {
+                element.classList.add('usage-high');
+            }
+        }
+        
+        // Tải thông tin các interfaces
+        function loadInterfaces(routerId) {
+            fetch(`/api/connections/${routerId}/interfaces`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to get interfaces');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateInterfacesTable(data);
+                })
+                .catch(error => {
+                    console.error('Error loading interfaces:', error);
+                });
+        }
+        
+        // Cập nhật bảng interfaces
+        function updateInterfacesTable(interfaces) {
+            const tableBody = document.getElementById('interfacesBody');
+            tableBody.innerHTML = '';
+            
+            interfaces.forEach(iface => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = iface.name;
+                
+                const typeCell = document.createElement('td');
+                typeCell.textContent = iface.type;
+                
+                const macCell = document.createElement('td');
+                macCell.textContent = iface.macAddress || 'N/A';
+                
+                const statusCell = document.createElement('td');
+                
+                let statusClass = '';
+                let statusText = '';
+                
+                if (iface.disabled) {
+                    statusClass = 'interface-down';
+                    statusText = 'Disabled';
+                } else if (iface.running) {
+                    statusClass = 'interface-up';
+                    statusText = 'Up';
+                } else {
+                    statusClass = 'interface-down';
+                    statusText = 'Down';
+                }
+                
+                statusCell.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+                
+                row.appendChild(nameCell);
+                row.appendChild(typeCell);
+                row.appendChild(macCell);
+                row.appendChild(statusCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Format kích thước bytes
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+        
+        // Format uptime
+        function formatUptime(uptime) {
+            return uptime.replace(/w/g, ' weeks ').replace(/d/g, ' days ').replace(/h/g, ' hours ').replace(/m/g, ' minutes ').replace(/s/g, ' seconds');
+        }
+    </script>
 </body>
 </html>

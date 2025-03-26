@@ -9,6 +9,7 @@ dependencies = [
     "jinja2>=3.1.6",
     "pandas>=2.2.3",
     "plotly>=6.0.1",
+    "python-dotenv>=1.1.0",
     "requests>=2.32.3",
     "routeros-api>=0.21.0",
     "sendgrid>=6.11.0",

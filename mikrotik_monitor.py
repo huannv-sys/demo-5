@@ -11,15 +11,19 @@ import time
 import argparse
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Cấu hình
+# Tải biến môi trường từ file .env
+load_dotenv()
+
+# Cấu hình từ biến môi trường hoặc cấu hình mặc định an toàn
 DEFAULT_ROUTER = {
-    "address": "113.22.135.94",
-    "port": 8728,
-    "username": "admin",
-    "password": "Ictech123$"
+    "address": os.getenv("MIKROTIK_ADDRESS", "localhost"),
+    "port": int(os.getenv("MIKROTIK_PORT", "8728")),
+    "username": os.getenv("MIKROTIK_USERNAME", ""),
+    "password": os.getenv("MIKROTIK_PASSWORD", "")
 }
-API_URL = "http://localhost:3000/api"
+API_URL = os.getenv("API_URL", "http://localhost:3000/api")
 
 def format_bytes(bytes_value, decimals=2):
     """Format số byte thành KB, MB, GB, TB"""

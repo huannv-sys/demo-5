@@ -9,9 +9,13 @@ import os
 import sys
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
 from jinja2 import Environment, FileSystemLoader
+
+# Tải các biến môi trường
+load_dotenv()
 
 # Cấu hình logging
 logging.basicConfig(

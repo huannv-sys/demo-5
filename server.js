@@ -24,13 +24,19 @@ app.get('/api/status', (req, res) => {
 
 // Router Connection Routes
 app.get('/api/connections', (req, res) => {
+  // Đọc từ cấu hình hoặc database thay vì hardcode
+  const routerAddress = process.env.MIKROTIK_ADDRESS || 'localhost';
+  const routerPort = parseInt(process.env.MIKROTIK_PORT || '8728');
+  const routerUsername = process.env.MIKROTIK_USERNAME || '';
+  const routerName = process.env.MIKROTIK_NAME || 'MikroTik Router';
+  
   res.json([
     {
       id: 1,
-      name: 'ICTech Router',
-      address: '113.22.135.94',
-      port: 8728,
-      username: 'admin',
+      name: routerName,
+      address: routerAddress,
+      port: routerPort,
+      username: routerUsername,
       isDefault: true,
       lastConnected: new Date().toISOString()
     }
@@ -80,13 +86,20 @@ app.post('/api/connections/:id/connect', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // In production, would fetch these from database
+    // Lấy thông tin từ biến môi trường thay vì hardcode
     const routerInfo = {
-      address: '113.22.135.94',
-      port: 8728,
-      username: 'admin',
-      password: 'Ictech123$'
+      address: process.env.MIKROTIK_ADDRESS || 'localhost',
+      port: parseInt(process.env.MIKROTIK_PORT || '8728'),
+      username: process.env.MIKROTIK_USERNAME || '',
+      password: process.env.MIKROTIK_PASSWORD || ''
     };
+    
+    // Kiểm tra xem thông tin đăng nhập có đầy đủ không
+    if (!routerInfo.username || !routerInfo.password) {
+      return res.status(400).json({ 
+        message: "Missing router credentials. Please check environment variables."
+      });
+    }
     
     const connected = await mikrotikApi.connect(
       routerInfo.address, 
@@ -129,13 +142,20 @@ app.get('/api/connections/:id/interfaces', async (req, res) => {
     const { id } = req.params;
     
     if (!mikrotikApi.isConnected()) {
-      // Thử kết nối tự động
+      // Thử kết nối tự động sử dụng biến môi trường
       const routerInfo = {
-        address: '113.22.135.94',
-        port: 8728,
-        username: 'admin',
-        password: 'Ictech123$'
+        address: process.env.MIKROTIK_ADDRESS || 'localhost',
+        port: parseInt(process.env.MIKROTIK_PORT || '8728'),
+        username: process.env.MIKROTIK_USERNAME || '',
+        password: process.env.MIKROTIK_PASSWORD || ''
       };
+      
+      // Kiểm tra thông tin đăng nhập trước khi kết nối
+      if (!routerInfo.username || !routerInfo.password) {
+        return res.status(400).json({ 
+          message: "Missing router credentials. Please check environment variables."
+        });
+      }
       
       const connected = await mikrotikApi.connect(
         routerInfo.address, 

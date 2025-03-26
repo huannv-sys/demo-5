@@ -8,6 +8,10 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Tải biến môi trường từ file .env
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -319,12 +323,12 @@ router.post('/test/email', (req, res) => {
   }
   
   // Thực thi script Python để gửi email thử nghiệm
-  const scriptPath = path.join(__dirname, '..', 'scripts', 'test_notification.py');
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'test_sendgrid_email.py');
   const command = `python ${scriptPath} --email "${email}"`;
   
   exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error executing test_notification.py: ${error}`);
+      console.error(`Error executing test_sendgrid_email.py: ${error}`);
       return res.status(500).json({ error: `Failed to send test email: ${stderr || error.message}` });
     }
     
@@ -350,12 +354,12 @@ router.post('/test/sms', (req, res) => {
   }
   
   // Thực thi script Python để gửi SMS thử nghiệm
-  const scriptPath = path.join(__dirname, '..', 'scripts', 'test_notification.py');
-  const command = `python ${scriptPath} --sms "${phone}"`;
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'test_twilio_sms.py');
+  const command = `python ${scriptPath} --phone "${phone}"`;
   
   exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error executing test_notification.py: ${error}`);
+      console.error(`Error executing test_twilio_sms.py: ${error}`);
       return res.status(500).json({ error: `Failed to send test SMS: ${stderr || error.message}` });
     }
     

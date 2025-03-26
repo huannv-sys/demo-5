@@ -9,8 +9,12 @@ import os
 import sys
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+
+# Tải các biến môi trường
+load_dotenv()
 
 # Cấu hình logging
 logging.basicConfig(
@@ -58,13 +62,13 @@ class SMSService:
             client = Client(self.account_sid, self.auth_token)
             
             # Gửi tin nhắn
-            message = client.messages.create(
+            message_result = client.messages.create(
                 body=message,
                 from_=self.phone_number,
                 to=to_phone
             )
             
-            logger.info(f"Đã gửi SMS thành công đến {to_phone} (SID: {message.sid})")
+            logger.info(f"Đã gửi SMS thành công đến {to_phone} (SID: {message_result.sid})")
             return True
             
         except TwilioRestException as e:

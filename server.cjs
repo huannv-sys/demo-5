@@ -1,17 +1,7 @@
-import express from 'express';
-import path from 'path';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-
-// Tạo một hàm require tương thích với ESM
-const require = createRequire(import.meta.url);
-// Import CommonJS module
-const mikrotikApi = require('./mikrotik-api');
-
-// Lấy đường dẫn của file hiện tại
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const path = require('path');
+const dotenv = require('dotenv');
+const mikrotikApi = require('./mikrotik-api.cjs');
 
 // Load environment variables
 dotenv.config();

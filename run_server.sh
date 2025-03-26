@@ -1,43 +1,42 @@
 #!/bin/bash
 
-# Script để chạy máy chủ MikroTik Controller trong terminal
-# Chạy script này để chạy máy chủ và xem nhật ký trực tiếp
+# Script chạy đồng thời Node.js và Streamlit
+echo "Starting MikroTik Monitor..."
 
-# Hàm hiển thị thông báo
-print_message() {
-  echo -e "\e[1;34m[INFO]\e[0m $1"
+# Kiểm tra port 3000 (Node.js) và 5000 (Streamlit)
+check_port() {
+    nc -z localhost $1 > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Port $1 is already in use. Please close the application using this port."
+        exit 1
+    fi
 }
 
-print_success() {
-  echo -e "\e[1;32m[SUCCESS]\e[0m $1"
-}
+check_port 3000
+check_port 5000
 
-print_error() {
-  echo -e "\e[1;31m[ERROR]\e[0m $1"
-}
+# Đảm bảo thư mục logs tồn tại
+mkdir -p logs
 
-print_warning() {
-  echo -e "\e[1;33m[WARNING]\e[0m $1"
-}
+# Xóa các file pid cũ nếu có
+rm -f server.pid streamlit.pid
 
-# Kiểm tra môi trường Node.js
-if ! command -v node &> /dev/null; then
-  print_error "Node.js không được cài đặt."
-  print_message "Hãy cài đặt Node.js: sudo apt install nodejs"
-  exit 1
-fi
+# Khởi động Node.js API server
+echo "Starting Node.js API server on port 3000..."
+node server.js > logs/node.log 2>&1 &
+NODE_PID=$!
+echo $NODE_PID > server.pid
+echo "Node.js server started with PID $NODE_PID"
 
-# Kiểm tra file server
-if [ ! -f "server.mjs" ]; then
-  print_error "File server.mjs không tồn tại."
-  exit 1
-fi
+# Khởi động Streamlit UI
+echo "Starting Streamlit UI on port 5000..."
+streamlit run app.py --server.port=5000 > logs/streamlit.log 2>&1 &
+STREAMLIT_PID=$!
+echo $STREAMLIT_PID > streamlit.pid
+echo "Streamlit UI started with PID $STREAMLIT_PID"
 
-# Thông báo
-print_message "Khởi động MikroTik Controller..."
-print_message "Bạn có thể truy cập: http://localhost:3000"
-print_warning "Nhấn Ctrl+C để dừng server"
+echo "MikroTik Monitor is running."
+echo "- API server: http://localhost:3000"
+echo "- Web UI: http://localhost:5000"
 echo ""
-
-# Chạy server
-node server.mjs
+echo "To stop the servers, run: ./stop_server.sh"

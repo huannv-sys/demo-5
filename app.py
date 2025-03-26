@@ -49,23 +49,78 @@ with st.sidebar:
         © 2025 MikroTik Monitor
     """)
 
+# Cấu hình API URL (đảm bảo có thể truy cập trên cùng host)
+API_BASE_URL = "http://127.0.0.1:3000/api"
+
 # Hàm lấy thông tin router từ API
 def get_router_info():
     try:
-        # Mô phỏng dữ liệu từ API
-        return {
-            "name": "MikroTik Cloud Router",
-            "model": "RouterOS Cloud Hosted Router",
-            "version": "7.13.2",
-            "uptime": "12d 5h 37m 12s",
-            "cpu_load": "15%",
-            "memory_used": "128 MB / 512 MB",
-            "memory_percent": 25,
-            "storage_used": "350 MB / 2048 MB",
-            "storage_percent": 17,
-            "connected": True,
-            "last_connected": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        import requests
+        
+        # Kiểm tra trạng thái kết nối
+        response = requests.get(f"{API_BASE_URL}/test-mikrotik-connection", timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("success"):
+                router_info = data.get("routerInfo", {})
+                
+                # Lấy thông tin tài nguyên
+                resources_response = requests.get(f"{API_BASE_URL}/connections/1/resources", timeout=10)
+                resources = {}
+                
+                if resources_response.status_code == 200:
+                    resources = resources_response.json()
+                
+                # Định dạng thông tin để hiển thị
+                memory_used = int(resources.get("totalMemory", 0) - resources.get("freeMemory", 0))
+                total_memory = int(resources.get("totalMemory", 0))
+                memory_percent = 0
+                if total_memory > 0:
+                    memory_percent = (memory_used / total_memory) * 100
+                
+                storage_used = int(resources.get("totalHdd", 0) - resources.get("freeHdd", 0))
+                total_storage = int(resources.get("totalHdd", 0))
+                storage_percent = 0
+                if total_storage > 0:
+                    storage_percent = (storage_used / total_storage) * 100
+                
+                # Định dạng đơn vị để hiển thị
+                memory_used_mb = memory_used / (1024 * 1024)
+                total_memory_mb = total_memory / (1024 * 1024)
+                storage_used_mb = storage_used / (1024 * 1024)
+                total_storage_mb = total_storage / (1024 * 1024)
+                
+                return {
+                    "name": f"MikroTik {router_info.get('platform', 'Router')}",
+                    "model": router_info.get('board', 'Unknown'),
+                    "version": router_info.get('version', 'Unknown'),
+                    "uptime": router_info.get('uptime', 'Unknown'),
+                    "cpu_load": f"{resources.get('cpuLoad', '0')}%",
+                    "memory_used": f"{memory_used_mb:.0f} MB / {total_memory_mb:.0f} MB",
+                    "memory_percent": memory_percent,
+                    "storage_used": f"{storage_used_mb:.0f} MB / {total_storage_mb:.0f} MB",
+                    "storage_percent": storage_percent,
+                    "connected": True,
+                    "last_connected": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+            else:
+                return {
+                    "name": "MikroTik Router",
+                    "model": "Unknown",
+                    "version": "Unknown",
+                    "uptime": "Unknown",
+                    "cpu_load": "0%",
+                    "memory_used": "0 MB / 0 MB",
+                    "memory_percent": 0,
+                    "storage_used": "0 MB / 0 MB",
+                    "storage_percent": 0,
+                    "connected": False,
+                    "last_connected": "Never connected"
+                }
+        else:
+            st.error(f"Lỗi kết nối API: {response.status_code}")
+            return None
     except Exception as e:
         st.error(f"Lỗi khi lấy thông tin router: {e}")
         return None
@@ -73,14 +128,34 @@ def get_router_info():
 # Hàm lấy thông tin interface từ API
 def get_interfaces():
     try:
-        # Mô phỏng dữ liệu từ API
-        return [
-            {"name": "ether1", "type": "ethernet", "status": "up", "rx": 15600000, "tx": 8200000, "disabled": False},
-            {"name": "ether2", "type": "ethernet", "status": "up", "rx": 8100000, "tx": 4100000, "disabled": False},
-            {"name": "ether3", "type": "ethernet", "status": "down", "rx": 0, "tx": 0, "disabled": False},
-            {"name": "wlan1", "type": "wireless", "status": "up", "rx": 3500000, "tx": 12000000, "disabled": False},
-            {"name": "vpn-out1", "type": "vpn", "status": "up", "rx": 1500000, "tx": 850000, "disabled": False}
-        ]
+        import requests
+        
+        # Gọi API lấy danh sách interfaces
+        response = requests.get(f"{API_BASE_URL}/connections/1/interfaces", timeout=10)
+        
+        if response.status_code == 200:
+            interfaces_data = response.json()
+            
+            # Chuyển đổi dữ liệu từ API sang định dạng hiển thị
+            interfaces = []
+            for iface in interfaces_data:
+                # Mặc định giá trị rx/tx để demo
+                rx = 0
+                tx = 0
+                
+                interfaces.append({
+                    "name": iface.get("name", ""),
+                    "type": iface.get("type", "unknown"),
+                    "status": "up" if iface.get("running", False) else "down",
+                    "rx": rx,
+                    "tx": tx,
+                    "disabled": iface.get("disabled", False)
+                })
+            
+            return interfaces
+        else:
+            st.warning(f"Không thể lấy thông tin interfaces: {response.status_code}")
+            return []
     except Exception as e:
         st.error(f"Lỗi khi lấy danh sách interface: {e}")
         return []

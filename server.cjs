@@ -22,6 +22,71 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'API is running', time: new Date().toISOString() });
 });
 
+// Test MikroTik connection
+app.get('/api/test-mikrotik-connection', async (req, res) => {
+  try {
+    console.log("Đang kiểm tra kết nối MikroTik...");
+    
+    // Ngắt kết nối hiện tại nếu có
+    if (mikrotikApi.isConnected()) {
+      await mikrotikApi.disconnect();
+    }
+    
+    // Lấy thông tin kết nối từ biến môi trường
+    const routerInfo = {
+      address: process.env.MIKROTIK_ADDRESS || 'localhost',
+      port: parseInt(process.env.MIKROTIK_PORT || '8728'),
+      username: process.env.MIKROTIK_USERNAME || '',
+      password: process.env.MIKROTIK_PASSWORD || ''
+    };
+    
+    console.log('Thông tin kết nối router (test):', {
+      address: routerInfo.address,
+      port: routerInfo.port,
+      username: routerInfo.username,
+      passwordLength: routerInfo.password ? routerInfo.password.length : 0
+    });
+    
+    // Thử kết nối
+    const connected = await mikrotikApi.connect(
+      routerInfo.address, 
+      routerInfo.port, 
+      routerInfo.username, 
+      routerInfo.password
+    );
+    
+    if (connected) {
+      // Lấy thông tin cơ bản
+      const resources = await mikrotikApi.getResourceInfo();
+      console.log("Kết nối thành công! Thông tin hệ thống:", resources);
+      
+      res.json({
+        success: true,
+        message: "Kết nối thành công!",
+        routerInfo: {
+          platform: resources.platform,
+          board: resources.board,
+          version: resources.version,
+          uptime: resources.uptime
+        }
+      });
+    } else {
+      console.log("Kết nối thất bại!");
+      res.status(400).json({
+        success: false,
+        message: "Không thể kết nối đến MikroTik Router. Kiểm tra lại thông tin đăng nhập và kết nối mạng."
+      });
+    }
+  } catch (error) {
+    console.error("Lỗi khi kiểm tra kết nối:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra kết nối",
+      error: error.message
+    });
+  }
+});
+
 // Router Connection Routes
 app.get('/api/connections', (req, res) => {
   // Đọc từ cấu hình hoặc database thay vì hardcode
@@ -86,6 +151,14 @@ app.post('/api/connections/:id/connect', async (req, res) => {
   try {
     const { id } = req.params;
     
+    console.log(`Đang cố gắng kết nối đến router ID: ${id}`);
+    
+    // Disconnect if already connected
+    if (mikrotikApi.isConnected()) {
+      console.log('Phát hiện kết nối hiện tại, đang ngắt kết nối...');
+      await mikrotikApi.disconnect();
+    }
+    
     // Lấy thông tin từ biến môi trường thay vì hardcode
     const routerInfo = {
       address: process.env.MIKROTIK_ADDRESS || 'localhost',
@@ -94,13 +167,22 @@ app.post('/api/connections/:id/connect', async (req, res) => {
       password: process.env.MIKROTIK_PASSWORD || ''
     };
     
+    console.log('Thông tin kết nối router:', {
+      address: routerInfo.address,
+      port: routerInfo.port,
+      username: routerInfo.username,
+      passwordLength: routerInfo.password ? routerInfo.password.length : 0
+    });
+    
     // Kiểm tra xem thông tin đăng nhập có đầy đủ không
     if (!routerInfo.username || !routerInfo.password) {
+      console.log('Thiếu thông tin đăng nhập router');
       return res.status(400).json({ 
         message: "Missing router credentials. Please check environment variables."
       });
     }
     
+    console.log('Bắt đầu kết nối đến router...');
     const connected = await mikrotikApi.connect(
       routerInfo.address, 
       routerInfo.port, 
@@ -109,12 +191,14 @@ app.post('/api/connections/:id/connect', async (req, res) => {
     );
     
     if (connected) {
+      console.log('Kết nối thành công đến router!');
       res.json({ message: "Connected successfully", routerId: id });
     } else {
+      console.log('Kết nối thất bại');
       res.status(400).json({ message: "Failed to connect to router", routerId: id });
     }
   } catch (error) {
-    console.error('Error connecting to router:', error);
+    console.error('Lỗi khi kết nối đến router:', error);
     res.status(500).json({ message: "An error occurred while connecting to the router", error: error.message });
   }
 });

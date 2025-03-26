@@ -11,23 +11,28 @@ class MikroTikAPI {
   async connect(address, port, username, password) {
     try {
       console.log(`Đang kết nối đến ${address}:${port} với user ${username}`);
+      console.log('Thông số kết nối:', { host: address, port, user: username });
       
       this.client = new RouterOSAPI({
         host: address,
         port: port,
         user: username,
         password: password,
-        timeout: 5000,
+        timeout: 10000, // Tăng timeout lên 10 giây
+        keepalive: true
       });
 
+      console.log('Khởi tạo client thành công, đang thực hiện kết nối...');
       await this.client.connect();
+      
       this.connected = true;
       this.connectionInfo = { address, port, username, password };
       
       console.log('Kết nối thành công!');
       return true;
     } catch (error) {
-      console.error('Lỗi kết nối:', error.message);
+      console.error('Lỗi kết nối chi tiết:', error);
+      console.error('Thông báo lỗi:', error.message);
       this.connected = false;
       this.client = null;
       return false;

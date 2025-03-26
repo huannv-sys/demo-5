@@ -6,3 +6,33 @@ modules = ["nodejs-20", "python-3.11", "python3"]
 [nix]
 channel = "stable-24_05"
 
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "NodeServer"
+
+[[workflows.workflow]]
+name = "NodeServer"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server.js"
+waitForPort = 3000
+
+[deployment]
+run = ["sh", "-c", "node server.js"]
+

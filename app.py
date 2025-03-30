@@ -133,15 +133,25 @@ def get_interfaces():
         # Gọi API lấy danh sách interfaces
         response = requests.get(f"{API_BASE_URL}/connections/1/interfaces", timeout=10)
         
+        # Gọi API lấy thống kê interfaces
+        stats_response = requests.get(f"{API_BASE_URL}/connections/1/interface-stats", timeout=10)
+        
+        stats_data = []
+        if stats_response.status_code == 200:
+            stats_data = stats_response.json()
+        
         if response.status_code == 200:
             interfaces_data = response.json()
             
             # Chuyển đổi dữ liệu từ API sang định dạng hiển thị
             interfaces = []
             for iface in interfaces_data:
-                # Mặc định giá trị rx/tx để demo
-                rx = 0
-                tx = 0
+                # Tìm kiếm thông tin thống kê cho interface hiện tại
+                stat = next((s for s in stats_data if s.get("name") == iface.get("name")), {})
+                
+                # Lấy dữ liệu rx/tx từ thống kê
+                rx = stat.get("rxBytes", 0)
+                tx = stat.get("txBytes", 0)
                 
                 interfaces.append({
                     "name": iface.get("name", ""),
@@ -149,7 +159,8 @@ def get_interfaces():
                     "status": "up" if iface.get("running", False) else "down",
                     "rx": rx,
                     "tx": tx,
-                    "disabled": iface.get("disabled", False)
+                    "disabled": iface.get("disabled", False),
+                    "mac_address": iface.get("macAddress", "")
                 })
             
             return interfaces
@@ -163,14 +174,24 @@ def get_interfaces():
 # Hàm lấy thông tin log từ API
 def get_logs(limit=50):
     try:
-        # Mô phỏng dữ liệu từ API
-        return [
-            {"time": "2025-03-26 09:15:32", "topics": "system,info", "message": "System started"},
-            {"time": "2025-03-26 09:15:48", "topics": "wireless,info", "message": "wlan1 connected"},
-            {"time": "2025-03-26 09:22:15", "topics": "firewall,warning", "message": "Blocked connection from 192.168.1.254"},
-            {"time": "2025-03-26 10:35:17", "topics": "system,error", "message": "CPU overload detected"},
-            {"time": "2025-03-26 11:12:03", "topics": "dhcp,info", "message": "DHCP lease for 192.168.1.100 expired"}
-        ]
+        import requests
+        
+        # Gọi API lấy logs
+        response = requests.get(f"{API_BASE_URL}/connections/1/logs?limit={limit}", timeout=10)
+        
+        if response.status_code == 200:
+            logs_data = response.json()
+            return logs_data
+        else:
+            st.warning(f"Không thể lấy log từ router: {response.status_code}")
+            # Trả về dữ liệu mẫu nếu không thể kết nối
+            return [
+                {"time": "2025-03-26 09:15:32", "topics": "system,info", "message": "System started"},
+                {"time": "2025-03-26 09:15:48", "topics": "wireless,info", "message": "wlan1 connected"},
+                {"time": "2025-03-26 09:22:15", "topics": "firewall,warning", "message": "Blocked connection from 192.168.1.254"},
+                {"time": "2025-03-26 10:35:17", "topics": "system,error", "message": "CPU overload detected"},
+                {"time": "2025-03-26 11:12:03", "topics": "dhcp,info", "message": "DHCP lease for 192.168.1.100 expired"}
+            ]
     except Exception as e:
         st.error(f"Lỗi khi lấy logs: {e}")
         return []
@@ -367,45 +388,155 @@ elif page == "Thống kê mạng":
     with tab2:
         st.subheader("DHCP Leases")
         
-        # Mô phỏng dữ liệu
-        leases = [
-            {"address": "192.168.1.100", "mac_address": "00:11:22:33:44:55", "hostname": "laptop-user1", "expires": "12h 30m"},
-            {"address": "192.168.1.101", "mac_address": "AA:BB:CC:DD:EE:FF", "hostname": "android-phone", "expires": "23h 15m"},
-            {"address": "192.168.1.102", "mac_address": "11:22:33:44:55:66", "hostname": "smart-tv", "expires": "35h 45m"},
-            {"address": "192.168.1.103", "mac_address": "AA:11:BB:22:CC:33", "hostname": "desktop-pc", "expires": "6h 20m"},
-            {"address": "192.168.1.104", "mac_address": "FF:EE:DD:CC:BB:AA", "hostname": "printer", "expires": "48h 0m"}
-        ]
-        
-        # Tạo DataFrame và hiển thị
-        df_leases = pd.DataFrame(leases)
-        st.dataframe(df_leases, use_container_width=True)
+        # Lấy dữ liệu DHCP từ API
+        try:
+            import requests
+            
+            response = requests.get(f"{API_BASE_URL}/connections/1/dhcp", timeout=10)
+            
+            if response.status_code == 200:
+                dhcp_data = response.json()
+                leases_data = dhcp_data.get("leases", [])
+                
+                if leases_data:
+                    # Tạo DataFrame và hiển thị
+                    df_leases = pd.DataFrame(leases_data)
+                    
+                    # Định dạng các cột để hiển thị
+                    display_columns = ["address", "macAddress", "hostname", "expires", "status"]
+                    display_cols = [col for col in display_columns if col in df_leases.columns]
+                    
+                    column_config = {
+                        "address": "IP Address",
+                        "macAddress": "MAC Address",
+                        "hostname": "Hostname",
+                        "expires": "Expires In",
+                        "status": "Status"
+                    }
+                    
+                    st.dataframe(
+                        df_leases[display_cols], 
+                        column_config={k: v for k, v in column_config.items() if k in display_cols},
+                        use_container_width=True
+                    )
+                else:
+                    st.info("Không có DHCP lease nào được tìm thấy.")
+            else:
+                # Hiển thị dữ liệu mẫu nếu không lấy được từ API
+                leases = [
+                    {"address": "192.168.1.100", "macAddress": "00:11:22:33:44:55", "hostname": "laptop-user1", "expires": "12h 30m"},
+                    {"address": "192.168.1.101", "macAddress": "AA:BB:CC:DD:EE:FF", "hostname": "android-phone", "expires": "23h 15m"},
+                    {"address": "192.168.1.102", "macAddress": "11:22:33:44:55:66", "hostname": "smart-tv", "expires": "35h 45m"},
+                    {"address": "192.168.1.103", "macAddress": "AA:11:BB:22:CC:33", "hostname": "desktop-pc", "expires": "6h 20m"},
+                    {"address": "192.168.1.104", "macAddress": "FF:EE:DD:CC:BB:AA", "hostname": "printer", "expires": "48h 0m"}
+                ]
+                df_leases = pd.DataFrame(leases)
+                st.warning("Không thể lấy dữ liệu DHCP từ router. Hiển thị dữ liệu mẫu.")
+                st.dataframe(df_leases, use_container_width=True)
+        except Exception as e:
+            st.error(f"Lỗi khi lấy dữ liệu DHCP: {e}")
+            # Hiển thị dữ liệu mẫu khi có lỗi
+            leases = [
+                {"address": "192.168.1.100", "macAddress": "00:11:22:33:44:55", "hostname": "laptop-user1", "expires": "12h 30m"},
+                {"address": "192.168.1.101", "macAddress": "AA:BB:CC:DD:EE:FF", "hostname": "android-phone", "expires": "23h 15m"}
+            ]
+            df_leases = pd.DataFrame(leases)
+            st.dataframe(df_leases, use_container_width=True)
     
     with tab3:
         st.subheader("Wireless Networks")
         
-        # Mô phỏng dữ liệu
-        wireless = [
-            {"name": "Home-Network", "band": "2.4GHz", "channel": "6", "clients": 8, "security": "WPA2-PSK"},
-            {"name": "Office-5G", "band": "5GHz", "channel": "36", "clients": 3, "security": "WPA3"}
-        ]
-        
-        # Tạo DataFrame và hiển thị
-        df_wireless = pd.DataFrame(wireless)
-        st.dataframe(df_wireless, use_container_width=True)
-        
-        # Danh sách client
-        st.subheader("Wireless Clients")
-        
-        # Mô phỏng dữ liệu
-        clients = [
-            {"mac": "00:11:22:33:44:55", "network": "Home-Network", "signal": -65, "tx_rate": "54 Mbps", "rx_rate": "54 Mbps"},
-            {"mac": "AA:BB:CC:DD:EE:FF", "network": "Home-Network", "signal": -72, "tx_rate": "36 Mbps", "rx_rate": "36 Mbps"},
-            {"mac": "11:22:33:44:55:66", "network": "Office-5G", "signal": -58, "tx_rate": "180 Mbps", "rx_rate": "180 Mbps"}
-        ]
-        
-        # Tạo DataFrame và hiển thị
-        df_clients = pd.DataFrame(clients)
-        st.dataframe(df_clients, use_container_width=True)
+        # Lấy dữ liệu Wireless từ API
+        try:
+            import requests
+            
+            response = requests.get(f"{API_BASE_URL}/connections/1/wireless", timeout=10)
+            
+            if response.status_code == 200:
+                wireless_data = response.json()
+                interfaces = wireless_data.get("interfaces", [])
+                clients = wireless_data.get("clients", [])
+                
+                if interfaces:
+                    # Tạo DataFrame cho interfaces
+                    df_wireless = pd.DataFrame(interfaces)
+                    
+                    # Định dạng để hiển thị
+                    display_columns = ["name", "ssid", "band", "frequency", "channelWidth", "mode", "disabled"]
+                    display_cols = [col for col in display_columns if col in df_wireless.columns]
+                    
+                    column_config = {
+                        "name": "Interface",
+                        "ssid": "SSID",
+                        "band": "Band",
+                        "frequency": "Frequency",
+                        "channelWidth": "Channel Width",
+                        "mode": "Mode",
+                        "disabled": "Disabled"
+                    }
+                    
+                    st.dataframe(
+                        df_wireless[display_cols], 
+                        column_config={k: v for k, v in column_config.items() if k in display_cols},
+                        use_container_width=True
+                    )
+                else:
+                    st.info("Không tìm thấy wireless interface nào.")
+                
+                # Danh sách client
+                st.subheader("Wireless Clients")
+                
+                if clients:
+                    # Tạo DataFrame cho clients
+                    df_clients = pd.DataFrame(clients)
+                    
+                    # Định dạng để hiển thị
+                    display_columns = ["interface", "macAddress", "signalStrength", "txRate", "rxRate", "uptime"]
+                    display_cols = [col for col in display_columns if col in df_clients.columns]
+                    
+                    column_config = {
+                        "interface": "Interface",
+                        "macAddress": "MAC Address",
+                        "signalStrength": "Signal Strength",
+                        "txRate": "TX Rate",
+                        "rxRate": "RX Rate",
+                        "uptime": "Uptime"
+                    }
+                    
+                    st.dataframe(
+                        df_clients[display_cols], 
+                        column_config={k: v for k, v in column_config.items() if k in display_cols},
+                        use_container_width=True
+                    )
+                else:
+                    st.info("Không có client nào đang kết nối.")
+            else:
+                # Hiển thị dữ liệu mẫu nếu không lấy được từ API
+                st.warning("Không thể lấy dữ liệu wireless từ router. Hiển thị dữ liệu mẫu.")
+                wireless = [
+                    {"name": "Home-Network", "band": "2.4GHz", "channel": "6", "clients": 8, "security": "WPA2-PSK"},
+                    {"name": "Office-5G", "band": "5GHz", "channel": "36", "clients": 3, "security": "WPA3"}
+                ]
+                df_wireless = pd.DataFrame(wireless)
+                st.dataframe(df_wireless, use_container_width=True)
+                
+                # Danh sách client mẫu
+                st.subheader("Wireless Clients")
+                clients = [
+                    {"mac": "00:11:22:33:44:55", "network": "Home-Network", "signal": -65, "tx_rate": "54 Mbps", "rx_rate": "54 Mbps"},
+                    {"mac": "AA:BB:CC:DD:EE:FF", "network": "Home-Network", "signal": -72, "tx_rate": "36 Mbps", "rx_rate": "36 Mbps"},
+                    {"mac": "11:22:33:44:55:66", "network": "Office-5G", "signal": -58, "tx_rate": "180 Mbps", "rx_rate": "180 Mbps"}
+                ]
+                df_clients = pd.DataFrame(clients)
+                st.dataframe(df_clients, use_container_width=True)
+        except Exception as e:
+            st.error(f"Lỗi khi lấy dữ liệu wireless: {e}")
+            # Hiển thị dữ liệu mẫu khi có lỗi
+            wireless = [
+                {"name": "Home-Network", "band": "2.4GHz", "channel": "6", "clients": 8, "security": "WPA2-PSK"}
+            ]
+            df_wireless = pd.DataFrame(wireless)
+            st.dataframe(df_wireless, use_container_width=True)
 
 # Logs
 elif page == "Logs":

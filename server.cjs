@@ -261,6 +261,109 @@ app.get('/api/connections/:id/interfaces', async (req, res) => {
   }
 });
 
+// Get interface statistics
+app.get('/api/connections/:id/interface-stats', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const stats = await mikrotikApi.getInterfaceStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Error getting interface statistics:', error);
+    res.status(500).json({ message: "An error occurred while getting interface statistics", error: error.message });
+  }
+});
+
+// Get wireless information
+app.get('/api/connections/:id/wireless', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const wirelessInfo = await mikrotikApi.getWirelessInfo();
+    res.json(wirelessInfo);
+  } catch (error) {
+    console.error('Error getting wireless information:', error);
+    res.status(500).json({ message: "An error occurred while getting wireless information", error: error.message });
+  }
+});
+
+// Get DHCP information
+app.get('/api/connections/:id/dhcp', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const dhcpInfo = await mikrotikApi.getDHCPInfo();
+    res.json(dhcpInfo);
+  } catch (error) {
+    console.error('Error getting DHCP information:', error);
+    res.status(500).json({ message: "An error occurred while getting DHCP information", error: error.message });
+  }
+});
+
+// Get firewall rules
+app.get('/api/connections/:id/firewall', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const firewallRules = await mikrotikApi.getFirewallRules();
+    res.json(firewallRules);
+  } catch (error) {
+    console.error('Error getting firewall rules:', error);
+    res.status(500).json({ message: "An error occurred while getting firewall rules", error: error.message });
+  }
+});
+
+// Get VPN information
+app.get('/api/connections/:id/vpn', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const vpnInfo = await mikrotikApi.getVPNInfo();
+    res.json(vpnInfo);
+  } catch (error) {
+    console.error('Error getting VPN information:', error);
+    res.status(500).json({ message: "An error occurred while getting VPN information", error: error.message });
+  }
+});
+
+// Get logs
+app.get('/api/connections/:id/logs', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ message: "Not connected to router" });
+    }
+    
+    const logs = await mikrotikApi.getLogs(limit);
+    res.json(logs);
+  } catch (error) {
+    console.error('Error getting logs:', error);
+    res.status(500).json({ message: "An error occurred while getting logs", error: error.message });
+  }
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'public', 'index.html'));

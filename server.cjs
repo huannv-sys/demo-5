@@ -710,7 +710,31 @@ app.get('/api/router/capsman/clients', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Not connected to router' });
     }
     
-    const clients = await mikrotikApi.executeCommand('/caps-man/client/print');
+    // Trên một số phiên bản RouterOS, lệnh client có thể không tồn tại
+    // Thay vào đó, chúng ta có thể sử dụng dữ liệu từ registration-table
+    let clients = [];
+    try {
+      clients = await mikrotikApi.executeCommand('/caps-man/client/print');
+    } catch (clientError) {
+      console.log('Không thể truy cập lệnh /caps-man/client/print, sẽ dùng registration-table thay thế');
+      try {
+        // Sử dụng registration-table để lấy thông tin clients
+        const registrations = await mikrotikApi.executeCommand('/caps-man/registration-table/print');
+        // Chuyển đổi dữ liệu từ registration-table sang định dạng client
+        clients = registrations.map(reg => ({
+          mac_address: reg.mac_address || '',
+          interface: reg.interface || '',
+          rx_signal: reg.rx_signal || '',
+          tx_rate: reg.tx_rate || '',
+          rx_rate: reg.rx_rate || '',
+          uptime: reg.uptime || '',
+          // Thêm các trường khác nếu cần
+        }));
+      } catch (regError) {
+        console.error('Không thể lấy dữ liệu từ registration-table:', regError);
+        clients = []; // Mảng trống nếu cả hai cách đều thất bại
+      }
+    }
     
     res.json({ 
       success: true, 
@@ -847,15 +871,23 @@ app.get('/api/router/logs', async (req, res) => {
     const topics = req.query.topics || null;
     
     let command = '/log/print';
-    let params = {
-      limit
-    };
+    let logs = [];
     
-    if (topics) {
-      params.topics = topics;
+    try {
+      // Thử truy vấn không sử dụng tham số limit
+      logs = await mikrotikApi.executeCommand(command, [], {});
+      
+      // Lọc theo topic nếu cần
+      if (topics) {
+        logs = logs.filter(log => log.topics && log.topics.includes(topics));
+      }
+      
+      // Giới hạn kết quả
+      logs = logs.slice(0, limit);
+    } catch (secondError) {
+      console.error('Không thể lấy log:', secondError);
+      logs = [];
     }
-    
-    const logs = await mikrotikApi.executeCommand(command, [], params);
     
     res.json({ 
       success: true, 

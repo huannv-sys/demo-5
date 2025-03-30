@@ -1287,15 +1287,15 @@ document.addEventListener('DOMContentLoaded', function() {
         clearAutoRefresh();
         
         // Get interval from settings or parameter
-        const autoRefreshInterval = interval || parseInt(document.getElementById('autoRefreshInterval')?.value) || 30;
+        const refreshTime = interval || parseInt(document.getElementById('autoRefreshInterval')?.value) || 30;
         
         // Only set up if interval is > 0
-        if (autoRefreshInterval > 0) {
+        if (refreshTime > 0) {
             autoRefreshInterval = setInterval(() => {
                 if (isConnected) {
                     refreshData();
                 }
-            }, autoRefreshInterval * 1000);
+            }, refreshTime * 1000);
         }
     }
     

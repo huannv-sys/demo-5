@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MikroTik Controller</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="mikrotik.css">
+    <link rel="shortcut icon" href="mikrotik-logo.png" type="image/png">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo-container">
+                <img src="mikrotik-logo.png" alt="MikroTik Logo" class="logo">
+                <h1>MikroTik Controller</h1>
+            </div>
+            <div class="header-actions">
+                <button id="connectBtn" class="btn btn-primary">
+                    <i class="fas fa-plug"></i> Kết nối
+                </button>
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+                <div class="connection-status">
+                    <span id="statusIndicator" class="status-indicator disconnected"></span>
+                    <span id="statusText">Chưa kết nối</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Tổng quan</span>
+                    </li>
+                    <li class="nav-item" data-tab="interfaces">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Giao diện</span>
+                    </li>
+                    <li class="nav-item" data-tab="wireless">
+                        <i class="fas fa-wifi"></i>
+                        <span>Không dây</span>
+                    </li>
+                    <li class="nav-item" data-tab="firewall">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Tường lửa</span>
+                    </li>
+                    <li class="nav-item" data-tab="dhcp">
+                        <i class="fas fa-server"></i>
+                        <span>DHCP</span>
+                    </li>
+                    <li class="nav-item" data-tab="vpn">
+                        <i class="fas fa-lock"></i>
+                        <span>VPN</span>
+                    </li>
+                    <li class="nav-item" data-tab="logs">
+                        <i class="fas fa-list"></i>
+                        <span>Nhật ký</span>
+                    </li>
+                    <li class="nav-item" data-tab="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Cài đặt</span>
+                    </li>
+                </ul>
+            </aside>
+
+            <main class="content">
+                <!-- Dashboard Tab -->
+                <section id="dashboard" class="tab-content active">
+                    <h2><i class="fas fa-tachometer-alt"></i> Tổng quan hệ thống</h2>
+                    
+                    <div class="connect-form" id="routerConnectForm">
+                        <h3>Kết nối đến thiết bị MikroTik</h3>
+                        <div class="form-group">
+                            <label for="routerAddress">Địa chỉ IP:</label>
+                            <input type="text" id="routerAddress" value="1.54.179.248" placeholder="Ví dụ: 192.168.88.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="routerPort">Cổng API:</label>
+                            <input type="number" id="routerPort" value="8728" placeholder="Mặc định: 8728">
+                        </div>
+                        <div class="form-group">
+                            <label for="routerUsername">Tên đăng nhập:</label>
+                            <input type="text" id="routerUsername" value="admin" placeholder="Mặc định: admin">
+                        </div>
+                        <div class="form-group">
+                            <label for="routerPassword">Mật khẩu:</label>
+                            <input type="password" id="routerPassword" value="">
+                        </div>
+                        <button id="connectFormBtn" class="btn btn-primary">
+                            <i class="fas fa-plug"></i> Kết nối
+                        </button>
+                    </div>
+
+                    <div class="dashboard-panels" id="dashboardPanels" style="display: none;">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-microchip"></i> Thông tin hệ thống</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="info-grid" id="systemInfo">
+                                    <div class="info-item">
+                                        <span class="info-label">Tên thiết bị:</span>
+                                        <span class="info-value" id="deviceName">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Kiểu thiết bị:</span>
+                                        <span class="info-value" id="deviceModel">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Phiên bản OS:</span>
+                                        <span class="info-value" id="deviceOsVersion">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Firmware:</span>
+                                        <span class="info-value" id="deviceFirmware">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Thời gian hoạt động:</span>
+                                        <span class="info-value" id="deviceUptime">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">CPU:</span>
+                                        <span class="info-value" id="cpuLoad">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Bộ nhớ:</span>
+                                        <span class="info-value" id="memoryUsage">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Số lõi CPU:</span>
+                                        <span class="info-value" id="cpuCount">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-chart-line"></i> Hiệu suất</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="performance-meters">
+                                    <div class="meter">
+                                        <div class="meter-label">CPU</div>
+                                        <div class="meter-container">
+                                            <div class="meter-bar" id="cpuBar" style="width: 0%;">0%</div>
+                                        </div>
+                                    </div>
+                                    <div class="meter">
+                                        <div class="meter-label">Bộ nhớ</div>
+                                        <div class="meter-container">
+                                            <div class="meter-bar" id="memoryBar" style="width: 0%;">0%</div>
+                                        </div>
+                                    </div>
+                                    <div class="meter">
+                                        <div class="meter-label">HDD</div>
+                                        <div class="meter-container">
+                                            <div class="meter-bar" id="hddBar" style="width: 0%;">0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-exchange-alt"></i> Tổng quan mạng</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="network-summary" id="networkSummary">
+                                    <div class="summary-item">
+                                        <div class="summary-icon"><i class="fas fa-network-wired"></i></div>
+                                        <div class="summary-details">
+                                            <div class="summary-value" id="totalInterfaces">-</div>
+                                            <div class="summary-label">Tổng số giao diện</div>
+                                        </div>
+                                    </div>
+                                    <div class="summary-item">
+                                        <div class="summary-icon"><i class="fas fa-wifi"></i></div>
+                                        <div class="summary-details">
+                                            <div class="summary-value" id="wirelessClients">-</div>
+                                            <div class="summary-label">Clients không dây</div>
+                                        </div>
+                                    </div>
+                                    <div class="summary-item">
+                                        <div class="summary-icon"><i class="fas fa-shield-alt"></i></div>
+                                        <div class="summary-details">
+                                            <div class="summary-value" id="firewallRules">-</div>
+                                            <div class="summary-label">Quy tắc tường lửa</div>
+                                        </div>
+                                    </div>
+                                    <div class="summary-item">
+                                        <div class="summary-icon"><i class="fas fa-server"></i></div>
+                                        <div class="summary-details">
+                                            <div class="summary-value" id="dhcpLeases">-</div>
+                                            <div class="summary-label">DHCP đang hoạt động</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Interfaces Tab -->
+                <section id="interfaces" class="tab-content">
+                    <h2><i class="fas fa-network-wired"></i> Giao diện mạng</h2>
+                    <div class="loader" id="interfacesLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                    <div class="data-table-container" id="interfacesTableContainer" style="display: none;">
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <input type="text" id="interfaceSearch" placeholder="Tìm kiếm giao diện...">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="filter-options">
+                                <select id="interfaceTypeFilter">
+                                    <option value="all">Tất cả các loại</option>
+                                    <option value="ether">Ethernet</option>
+                                    <option value="wlan">Wireless</option>
+                                    <option value="vlan">VLAN</option>
+                                    <option value="bridge">Bridge</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table class="data-table" id="interfacesTable">
+                            <thead>
+                                <tr>
+                                    <th>Tên</th>
+                                    <th>Loại</th>
+                                    <th>Địa chỉ MAC</th>
+                                    <th>Trạng thái</th>
+                                    <th>Tốc độ</th>
+                                    <th>TX/RX</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="interfacesTableBody">
+                                <!-- Dữ liệu interfaces sẽ được thêm vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="error-message" id="interfacesError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu giao diện mạng. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- Wireless Tab -->
+                <section id="wireless" class="tab-content">
+                    <h2><i class="fas fa-wifi"></i> Mạng không dây</h2>
+                    <div class="loader" id="wirelessLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                    <div class="wireless-content" id="wirelessContent" style="display: none;">
+                        <div class="tabs">
+                            <div class="tab active" data-wireless-tab="interfaces">Interfaces</div>
+                            <div class="tab" data-wireless-tab="clients">Clients</div>
+                            <div class="tab" data-wireless-tab="scan">Quét mạng</div>
+                        </div>
+                        
+                        <div class="wireless-tab-content active" id="wirelessInterfaces">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>SSID</th>
+                                        <th>Kênh</th>
+                                        <th>Chuẩn</th>
+                                        <th>Tần số</th>
+                                        <th>Băng thông</th>
+                                        <th>Bảo mật</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wirelessInterfacesTableBody">
+                                    <!-- Dữ liệu wireless interfaces sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="wireless-tab-content" id="wirelessClients">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>MAC</th>
+                                        <th>Interface</th>
+                                        <th>SSID</th>
+                                        <th>Tín hiệu</th>
+                                        <th>Tốc độ TX/RX</th>
+                                        <th>Thời gian kết nối</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wirelessClientsTableBody">
+                                    <!-- Dữ liệu wireless clients sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="wireless-tab-content" id="wirelessScan">
+                            <div class="scan-controls">
+                                <button id="startScanBtn" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Bắt đầu quét
+                                </button>
+                                <div class="scan-status">
+                                    <span id="scanStatusText">Chưa quét</span>
+                                </div>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SSID</th>
+                                        <th>BSSID</th>
+                                        <th>Kênh</th>
+                                        <th>Tần số</th>
+                                        <th>Tín hiệu</th>
+                                        <th>Bảo mật</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wirelessScanTableBody">
+                                    <!-- Dữ liệu wireless scan sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="error-message" id="wirelessError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu mạng không dây. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- Firewall Tab -->
+                <section id="firewall" class="tab-content">
+                    <h2><i class="fas fa-shield-alt"></i> Tường lửa</h2>
+                    <div class="loader" id="firewallLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                    <div class="firewall-content" id="firewallContent" style="display: none;">
+                        <div class="tabs">
+                            <div class="tab active" data-firewall-tab="filter">Filter Rules</div>
+                            <div class="tab" data-firewall-tab="nat">NAT</div>
+                            <div class="tab" data-firewall-tab="mangle">Mangle</div>
+                        </div>
+                        
+                        <div class="firewall-tab-content active" id="firewallFilter">
+                            <div class="table-actions">
+                                <div class="search-box">
+                                    <input type="text" id="firewallFilterSearch" placeholder="Tìm kiếm quy tắc...">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Chain</th>
+                                        <th>Action</th>
+                                        <th>Src. Address</th>
+                                        <th>Dst. Address</th>
+                                        <th>Protocol</th>
+                                        <th>Dst. Port</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="firewallFilterTableBody">
+                                    <!-- Dữ liệu firewall filter sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="firewall-tab-content" id="firewallNat">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Chain</th>
+                                        <th>Action</th>
+                                        <th>Src. Address</th>
+                                        <th>Dst. Address</th>
+                                        <th>Protocol</th>
+                                        <th>Dst. Port</th>
+                                        <th>To Addresses</th>
+                                        <th>To Ports</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="firewallNatTableBody">
+                                    <!-- Dữ liệu firewall NAT sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="firewall-tab-content" id="firewallMangle">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Chain</th>
+                                        <th>Action</th>
+                                        <th>Src. Address</th>
+                                        <th>Dst. Address</th>
+                                        <th>Protocol</th>
+                                        <th>Mark</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="firewallMangleTableBody">
+                                    <!-- Dữ liệu firewall mangle sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="error-message" id="firewallError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu tường lửa. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- DHCP Tab -->
+                <section id="dhcp" class="tab-content">
+                    <h2><i class="fas fa-server"></i> DHCP Server</h2>
+                    <div class="loader" id="dhcpLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                    <div class="dhcp-content" id="dhcpContent" style="display: none;">
+                        <div class="tabs">
+                            <div class="tab active" data-dhcp-tab="servers">Servers</div>
+                            <div class="tab" data-dhcp-tab="leases">Leases</div>
+                            <div class="tab" data-dhcp-tab="networks">Networks</div>
+                        </div>
+                        
+                        <div class="dhcp-tab-content active" id="dhcpServers">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>Interface</th>
+                                        <th>Địa chỉ mạng</th>
+                                        <th>Gateway</th>
+                                        <th>Pool</th>
+                                        <th>Lease Time</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dhcpServersTableBody">
+                                    <!-- Dữ liệu DHCP servers sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="dhcp-tab-content" id="dhcpLeases">
+                            <div class="table-actions">
+                                <div class="search-box">
+                                    <input type="text" id="dhcpLeaseSearch" placeholder="Tìm kiếm lease...">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="filter-options">
+                                    <select id="dhcpLeaseStatusFilter">
+                                        <option value="all">Tất cả trạng thái</option>
+                                        <option value="bound">Bound</option>
+                                        <option value="waiting">Waiting</option>
+                                        <option value="offered">Offered</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Địa chỉ MAC</th>
+                                        <th>Địa chỉ IP</th>
+                                        <th>Hostname</th>
+                                        <th>Server</th>
+                                        <th>Thời gian hoạt động</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dhcpLeasesTableBody">
+                                    <!-- Dữ liệu DHCP leases sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="dhcp-tab-content" id="dhcpNetworks">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Network</th>
+                                        <th>Gateway</th>
+                                        <th>DNS Servers</th>
+                                        <th>NTP Server</th>
+                                        <th>Domain</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dhcpNetworksTableBody">
+                                    <!-- Dữ liệu DHCP networks sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="error-message" id="dhcpError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu DHCP. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- VPN Tab -->
+                <section id="vpn" class="tab-content">
+                    <h2><i class="fas fa-lock"></i> VPN</h2>
+                    <div class="loader" id="vpnLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                    <div class="vpn-content" id="vpnContent" style="display: none;">
+                        <div class="tabs">
+                            <div class="tab active" data-vpn-tab="interfaces">Interfaces</div>
+                            <div class="tab" data-vpn-tab="secrets">Secrets</div>
+                            <div class="tab" data-vpn-tab="active">Active Connections</div>
+                        </div>
+                        
+                        <div class="vpn-tab-content active" id="vpnInterfaces">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>Loại</th>
+                                        <th>Enabled</th>
+                                        <th>Máy chủ/Máy khách</th>
+                                        <th>Điểm cuối</th>
+                                        <th>User</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vpnInterfacesTableBody">
+                                    <!-- Dữ liệu VPN interfaces sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="vpn-tab-content" id="vpnSecrets">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>Loại</th>
+                                        <th>Service</th>
+                                        <th>Hồ sơ</th>
+                                        <th>Local Address</th>
+                                        <th>Remote Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vpnSecretsTableBody">
+                                    <!-- Dữ liệu VPN secrets sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="vpn-tab-content" id="vpnActive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Service</th>
+                                        <th>Giao diện</th>
+                                        <th>Caller ID</th>
+                                        <th>Địa chỉ IP</th>
+                                        <th>Thời gian kết nối</th>
+                                        <th>Đã gửi/Đã nhận</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vpnActiveTableBody">
+                                    <!-- Dữ liệu VPN active connections sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="error-message" id="vpnError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu VPN. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- Logs Tab -->
+                <section id="logs" class="tab-content">
+                    <h2><i class="fas fa-list"></i> Nhật ký hệ thống</h2>
+                    <div class="logs-controls">
+                        <div class="logs-filter">
+                            <select id="logTopicFilter">
+                                <option value="all">Tất cả chủ đề</option>
+                                <option value="system">System</option>
+                                <option value="firewall">Firewall</option>
+                                <option value="wireless">Wireless</option>
+                                <option value="dhcp">DHCP</option>
+                                <option value="critical">Critical</option>
+                                <option value="error">Error</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Info</option>
+                            </select>
+                            <input type="number" id="logLimit" value="50" min="10" max="500">
+                            <button id="refreshLogsBtn" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i> Làm mới
+                            </button>
+                        </div>
+                    </div>
+                    <div class="loader" id="logsLoader">
+                        <div class="spinner"></div>
+                        <p>Đang tải nhật ký...</p>
+                    </div>
+                    <div class="logs-container" id="logsContainer" style="display: none;">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Chủ đề</th>
+                                    <th>Nội dung</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <!-- Dữ liệu logs sẽ được thêm vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="error-message" id="logsError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Không thể tải dữ liệu nhật ký. Vui lòng kiểm tra kết nối.</p>
+                    </div>
+                </section>
+
+                <!-- Settings Tab -->
+                <section id="settings" class="tab-content">
+                    <h2><i class="fas fa-cog"></i> Cài đặt</h2>
+                    
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <h3>Cài đặt chung</h3>
+                            <div class="settings-form">
+                                <div class="form-group">
+                                    <label for="autoRefreshInterval">Tự động làm mới (giây):</label>
+                                    <input type="number" id="autoRefreshInterval" value="30" min="0" max="3600">
+                                    <small>0 = tắt tự động làm mới</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="darkModeToggle">Chế độ tối:</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="darkModeToggle" checked>
+                                        <label for="darkModeToggle"></label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="logRetention">Giữ nhật ký (ngày):</label>
+                                    <input type="number" id="logRetention" value="7" min="1" max="90">
+                                </div>
+                            </div>
+                            <button id="saveSettingsBtn" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu cài đặt
+                            </button>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>Cài đặt thông báo</h3>
+                            <div class="settings-form">
+                                <div class="form-group">
+                                    <label for="emailNotificationsToggle">Email thông báo:</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="emailNotificationsToggle">
+                                        <label for="emailNotificationsToggle"></label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="emailRecipients">Người nhận email:</label>
+                                    <input type="text" id="emailRecipients" placeholder="Ví dụ: email1@domain.com, email2@domain.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="smsNotificationsToggle">SMS thông báo:</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="smsNotificationsToggle">
+                                        <label for="smsNotificationsToggle"></label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phoneNumbers">Số điện thoại:</label>
+                                    <input type="text" id="phoneNumbers" placeholder="Ví dụ: +84123456789, +84987654321">
+                                    <small>Định dạng quốc tế (bắt đầu bằng +84 cho Việt Nam)</small>
+                                </div>
+                            </div>
+                            <button id="saveNotificationSettingsBtn" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu cài đặt thông báo
+                            </button>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>Cài đặt cảnh báo</h3>
+                            <div class="settings-form">
+                                <div class="form-group">
+                                    <label for="cpuThreshold">Ngưỡng CPU (%):</label>
+                                    <input type="number" id="cpuThreshold" value="80" min="50" max="95">
+                                </div>
+                                <div class="form-group">
+                                    <label for="memoryThreshold">Ngưỡng bộ nhớ (%):</label>
+                                    <input type="number" id="memoryThreshold" value="80" min="50" max="95">
+                                </div>
+                                <div class="form-group">
+                                    <label for="diskThreshold">Ngưỡng ổ đĩa (%):</label>
+                                    <input type="number" id="diskThreshold" value="85" min="50" max="95">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bandwidthThreshold">Ngưỡng băng thông (%):</label>
+                                    <input type="number" id="bandwidthThreshold" value="75" min="50" max="95">
+                                </div>
+                            </div>
+                            <button id="saveAlertSettingsBtn" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu cài đặt cảnh báo
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="app-info">
+                    <span>MikroTik Controller v1.0 | Developed by Replit AI</span>
+                </div>
+                <div class="action-status" id="actionStatus"></div>
+                <div class="copyright">
+                    <span>&copy; 2025 MikroTik Controller</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Xác nhận</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                Bạn có chắc chắn muốn thực hiện hành động này?
+            </div>
+            <div class="modal-footer">
+                <button id="modalCancelBtn" class="btn btn-secondary">Hủy</button>
+                <button id="modalConfirmBtn" class="btn btn-danger">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="mikrotik.js"></script>
+</body>
+</html>

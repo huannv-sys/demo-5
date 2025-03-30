@@ -14,6 +14,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// MIME types
+app.use((req, res, next) => {
+  if (req.path.endsWith('.svg')) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+  }
+  next();
+});
+
 // Serve static files
 app.use(express.static('public'));
 
@@ -365,6 +373,10 @@ app.get('/api/connections/:id/logs', async (req, res) => {
 });
 
 // SPA fallback
+app.get('/mikrotik', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'public', 'mikrotik.html'));
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });

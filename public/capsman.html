@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MikroTik CAPsMAN Monitor</title>
+  <link rel="stylesheet" href="mikrotik.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <img src="mikrotik-logo.svg" alt="MikroTik Logo">
+        <span>CAPsMAN Monitor</span>
+      </div>
+      <div class="connection-status">
+        <span id="status-indicator">Chưa kết nối</span>
+        <button id="connect-btn" class="btn primary">Kết nối</button>
+        <button id="disconnect-btn" class="btn" style="display: none">Ngắt kết nối</button>
+      </div>
+    </header>
+
+    <div class="connection-form" id="connection-form">
+      <h2>Kết nối đến MikroTik Router</h2>
+      <form id="router-form">
+        <div class="form-group">
+          <label for="address">Địa chỉ IP:</label>
+          <input type="text" id="address" name="address" value="1.54.179.248" required>
+        </div>
+        <div class="form-group">
+          <label for="port">Port:</label>
+          <input type="number" id="port" name="port" value="8728" required>
+        </div>
+        <div class="form-group">
+          <label for="username">Tài khoản:</label>
+          <input type="text" id="username" name="username" value="admin" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Kết nối</button>
+          <button type="button" class="btn" id="cancel-connect">Hủy</button>
+        </div>
+      </form>
+    </div>
+
+    <main id="main-content" style="display: none">
+      <div class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="#overview" class="active"><i class="fas fa-th-large"></i> Tổng quan</a></li>
+            <li><a href="#access-points"><i class="fas fa-wifi"></i> Access Points</a></li>
+            <li><a href="#clients"><i class="fas fa-laptop"></i> Clients</a></li>
+            <li><a href="#configurations"><i class="fas fa-cogs"></i> Cấu hình</a></li>
+            <li><a href="#channels"><i class="fas fa-broadcast-tower"></i> Kênh</a></li>
+            <li><a href="#security"><i class="fas fa-shield-alt"></i> Bảo mật</a></li>
+            <li><a href="/mikrotik"><i class="fas fa-arrow-left"></i> Quay lại</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="content">
+        <section id="overview" class="section active">
+          <h2>CAPsMAN Dashboard</h2>
+          <div class="dashboard">
+            <div class="status-card">
+              <div class="card-header">
+                <h3>Trạng thái CAPsMAN</h3>
+                <button class="btn small refresh-btn" data-target="status"><i class="fas fa-sync-alt"></i></button>
+              </div>
+              <div class="card-body" id="status-container">
+                <div class="loading">Đang tải...</div>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="card-header">
+                <h3>Access Points</h3>
+                <button class="btn small refresh-btn" data-target="aps-summary"><i class="fas fa-sync-alt"></i></button>
+              </div>
+              <div class="card-body" id="aps-summary-container">
+                <div class="loading">Đang tải...</div>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="card-header">
+                <h3>Clients</h3>
+                <button class="btn small refresh-btn" data-target="clients-summary"><i class="fas fa-sync-alt"></i></button>
+              </div>
+              <div class="card-body" id="clients-summary-container">
+                <div class="loading">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>CAPsMAN Interfaces</h3>
+                  <button class="btn small refresh-btn" data-target="interfaces"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="interfaces-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="access-points" class="section">
+          <h2>Access Points</h2>
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>Registered Access Points</h3>
+                  <button class="btn small refresh-btn" data-target="access-points"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="access-points-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="clients" class="section">
+          <h2>Connected Clients</h2>
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>Wireless Clients</h3>
+                  <button class="btn small refresh-btn" data-target="clients"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="clients-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="configurations" class="section">
+          <h2>CAPsMAN Configurations</h2>
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>Configurations</h3>
+                  <button class="btn small refresh-btn" data-target="configurations"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="configurations-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="channels" class="section">
+          <h2>CAPsMAN Channels</h2>
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>Channel Configurations</h3>
+                  <button class="btn small refresh-btn" data-target="channels"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="channels-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="security" class="section">
+          <h2>CAPsMAN Security</h2>
+          <div class="row">
+            <div class="col-12">
+              <div class="status-card">
+                <div class="card-header">
+                  <h3>Security Configurations</h3>
+                  <button class="btn small refresh-btn" data-target="security"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive" id="security-container">
+                    <div class="loading">Đang tải...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div id="toast-container"></div>
+  </div>
+
+  <script src="capsman.js"></script>
+</body>
+</html>

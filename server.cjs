@@ -608,6 +608,120 @@ app.get('/api/router/wireless/scan-results', async (req, res) => {
   }
 });
 
+// Get CAPsMAN interfaces
+app.get('/api/router/capsman/interfaces', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const capsmanInterfaces = await mikrotikApi.executeCommand('/caps-man/interface/print');
+    
+    res.json({ 
+      success: true, 
+      data: capsmanInterfaces
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN interfaces:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN interfaces', error: error.message });
+  }
+});
+
+// Get CAPsMAN registered access points
+app.get('/api/router/capsman/access-points', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const capsmanAPs = await mikrotikApi.executeCommand('/caps-man/registration-table/print');
+    
+    res.json({ 
+      success: true, 
+      data: capsmanAPs
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN access points:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN access points', error: error.message });
+  }
+});
+
+// Get CAPsMAN configurations
+app.get('/api/router/capsman/configurations', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const configurations = await mikrotikApi.executeCommand('/caps-man/configuration/print');
+    
+    res.json({ 
+      success: true, 
+      data: configurations
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN configurations:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN configurations', error: error.message });
+  }
+});
+
+// Get CAPsMAN channels
+app.get('/api/router/capsman/channels', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const channels = await mikrotikApi.executeCommand('/caps-man/channel/print');
+    
+    res.json({ 
+      success: true, 
+      data: channels
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN channels:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN channels', error: error.message });
+  }
+});
+
+// Get CAPsMAN security configs
+app.get('/api/router/capsman/security', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const security = await mikrotikApi.executeCommand('/caps-man/security/print');
+    
+    res.json({ 
+      success: true, 
+      data: security
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN security configs:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN security configs', error: error.message });
+  }
+});
+
+// Get CAPsMAN connected clients
+app.get('/api/router/capsman/clients', async (req, res) => {
+  try {
+    if (!mikrotikApi.isConnected()) {
+      return res.status(400).json({ success: false, message: 'Not connected to router' });
+    }
+    
+    const clients = await mikrotikApi.executeCommand('/caps-man/client/print');
+    
+    res.json({ 
+      success: true, 
+      data: clients
+    });
+  } catch (error) {
+    console.error('Error getting CAPsMAN clients:', error);
+    res.status(500).json({ success: false, message: 'Error getting CAPsMAN clients', error: error.message });
+  }
+});
+
 // Get firewall filter rules
 app.get('/api/router/firewall/filter', async (req, res) => {
   try {
@@ -1056,6 +1170,10 @@ app.post('/api/notifications/alert-config', async (req, res) => {
 // SPA fallback
 app.get('/mikrotik', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'public', 'mikrotik.html'));
+});
+
+app.get('/capsman', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'public', 'capsman.html'));
 });
 
 app.get('*', (req, res) => {

@@ -15,36 +15,18 @@
         <span>CAPsMAN Monitor</span>
       </div>
       <div class="connection-status">
-        <span id="status-indicator">Chưa kết nối</span>
-        <button id="connect-btn" class="btn primary">Kết nối</button>
-        <button id="disconnect-btn" class="btn" style="display: none">Ngắt kết nối</button>
+        <a href="/mikrotik" class="btn secondary"><i class="fas fa-arrow-left"></i> Trở về WebFig</a>
+        <span id="status-indicator">Đang kiểm tra kết nối...</span>
       </div>
     </header>
 
-    <div class="connection-form" id="connection-form">
+    <div class="connection-form" id="connection-form" style="display: none;">
       <h2>Kết nối đến MikroTik Router</h2>
-      <form id="router-form">
-        <div class="form-group">
-          <label for="address">Địa chỉ IP:</label>
-          <input type="text" id="address" name="address" value="1.54.179.248" required>
-        </div>
-        <div class="form-group">
-          <label for="port">Port:</label>
-          <input type="number" id="port" name="port" value="8728" required>
-        </div>
-        <div class="form-group">
-          <label for="username">Tài khoản:</label>
-          <input type="text" id="username" name="username" value="admin" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Mật khẩu:</label>
-          <input type="password" id="password" name="password" required>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn primary">Kết nối</button>
-          <button type="button" class="btn" id="cancel-connect">Hủy</button>
-        </div>
-      </form>
+      <p class="notice">
+        <i class="fas fa-info-circle"></i> 
+        Vui lòng kết nối router từ trang WebFig chính trước khi sử dụng CAPsMAN.
+        <a href="/mikrotik" class="btn primary">Đi đến trang WebFig</a>
+      </p>
     </div>
 
     <main id="main-content" style="display: none">

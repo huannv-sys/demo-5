@@ -321,6 +321,41 @@ class MikroTikAPI {
     }
   }
 
+  /**
+   * Thực thi lệnh tùy chỉnh đến RouterOS API
+   * @param {string} command - Đường dẫn lệnh RouterOS (ví dụ: '/interface/print')
+   * @param {Array} args - Mảng các tham số bổ sung (tùy chọn)
+   * @param {Object} options - Các tùy chọn bổ sung (tùy chọn)
+   * @returns {Promise<Array>} - Kết quả từ RouterOS dưới dạng mảng các đối tượng
+   */
+  async executeCommand(command, args = [], options = {}) {
+    this.checkConnection();
+    
+    try {
+      console.log(`Thực thi lệnh RouterOS: ${command}`, { args, options });
+      
+      let params = [...(args || [])];
+      
+      // Xử lý các tùy chọn
+      if (options.command === 'print' && command.endsWith('/scan')) {
+        // Lấy kết quả quét
+        return await this.client.write(command);
+      } else if (options.command === 'start' && command.endsWith('/scan')) {
+        // Bắt đầu quét
+        return await this.client.write(`${command}`, [], { 'duration': '10s' });
+      } else if (options.limit) {
+        params.push(`=limit=${options.limit}`);
+      }
+      
+      // Thực thi lệnh
+      const result = await this.client.write(command, params);
+      return result;
+    } catch (error) {
+      console.error(`Lỗi khi thực thi lệnh ${command}:`, error.message);
+      throw new Error(`Không thể thực thi lệnh ${command}: ` + error.message);
+    }
+  }
+
   checkConnection() {
     if (!this.isConnected()) {
       throw new Error('Không có kết nối đến router. Vui lòng kết nối trước.');

@@ -1,10 +1,15 @@
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv');
+const fs = require('fs');
 const mikrotikApi = require('./mikrotik-api.cjs');
 
 // Load environment variables
 dotenv.config();
+
+// Global variables for connection state
+let activeConnectionId = null;
+let router_connections = [];
 
 // Init app
 const app = express();
